@@ -1,0 +1,23 @@
+{
+  "name": "crypto-price-logger",
+  "version": "1.0.0",
+  "description": "A beginner-friendly Node.js application demonstrating Event Loop, Non-Blocking I/O, Core Modules (fs, http), and NPM",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "nodejs",
+    "event-loop",
+    "non-blocking",
+    "axios",
+    "fs",
+    "http"
+  ],
+  "author": "FA23-BSE-019",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.13.5"
+  }
+}
