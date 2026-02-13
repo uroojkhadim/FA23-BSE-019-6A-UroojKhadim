@@ -218,6 +218,7 @@ This project demonstrates:
 - Implement data visualization with charts
 - Add database integration instead of text file
 - Create a REST API for the logged data
+![alt text](image.png)
 
 ## 📚 Additional Resources
 
