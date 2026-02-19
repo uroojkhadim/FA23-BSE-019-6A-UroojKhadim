@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -148,7 +148,24 @@ app.get('/users', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'users.html'));
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+// Function to try starting server on available port
+function startServer(port, maxRetries = 10) {
+    const server = app.listen(port, () => {
+        console.log(`Server is running on http://localhost:${port}`);
+    }).on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+            console.log(`Port ${port} is already in use.`);
+            if (maxRetries > 0) {
+                console.log(`Trying port ${port + 1}...`);
+                startServer(port + 1, maxRetries - 1);
+            } else {
+                console.error('Could not find an available port after 10 attempts.');
+            }
+        } else {
+            console.error('Server error:', err);
+        }
+    });
+}
+
+// Start server with fallback ports
+startServer(PORT);

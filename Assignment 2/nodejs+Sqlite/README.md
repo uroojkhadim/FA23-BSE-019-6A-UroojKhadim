@@ -72,3 +72,5 @@ The application will be available at `http://localhost:3000`
 - express: Web framework for Node.js
 - sqlite3: SQLite database driver
 - body-parser: Parse incoming request bodies
+Screen shot
+![alt text](image.png)
