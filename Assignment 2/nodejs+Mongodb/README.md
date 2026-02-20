@@ -25,13 +25,27 @@ A simple, beginner-friendly CRUD application built with Node.js, Express, Mongoo
     ```
 5.  **Access the App**: Open your browser and navigate to `http://localhost:3000`.
 
+## Screenshots
+
+| User List Page | Add New User |
+| :---: | :---: |
+| ![User List](image-2.png) | ![Add User](image.png) |
+
+| Empty User List |
+| :---: |
+| ![Empty List](image-1.png) |
+
 ## Project Structure
-- `server.js`: Main entry point and server configuration.
+- `server.js`: Main entry point and server configuration (Express + MongoDB).
 - `models/User.js`: Mongoose schema for the User model.
 - `routes/userRoutes.js`: API endpoints for CRUD operations.
 - `public/`: Static HTML pages for the frontend.
-    - `index.html`: User list page.
-    - `create.html`: Add user page.
-    - `edit.html`: Edit user page.
-    - `view.html`: View user detail page.
-![alt text](image.png)![alt text](image-1.png)![alt text](image-2.png)
+    - `index.html`: Main page to list all users.
+    - `create.html`: Form to add new users.
+    - `edit.html`: Form to modify existing users.
+    - `view.html`: Detailed view of a single user.
+
+## Troubleshooting
+If you see a "Database not connected" message in the UI:
+1. Ensure your local MongoDB service is running.
+2. If using MongoDB Atlas, check your connection string in `server.js`.
