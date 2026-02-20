@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit User - CRUD App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 500px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: auto;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background-color: #ffc107;
+            color: black;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            background-color: #e0a800;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            text-decoration: none;
+            color: #007bff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Edit User</h1>
+        <form id="editForm">
+            <input type="hidden" id="userId">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="age">Age</label>
+                <input type="number" id="age" name="age" required>
+            </div>
+            <button type="submit" class="btn">Update User</button>
+        </form>
+        <a href="/" class="back-link">Back to List</a>
+    </div>
+
+    <script>
+        const userId = window.location.pathname.split('/').pop();
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch(`/api/users/${userId}`);
+                const user = await response.json();
+
+                document.getElementById('userId').value = user._id;
+                document.getElementById('name').value = user.name;
+                document.getElementById('email').value = user.email;
+                document.getElementById('age').value = user.age;
+            } catch (err) {
+                console.error('Error fetching user:', err);
+                alert('User not found');
+            }
+        });
+
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                age: document.getElementById('age').value
+            };
+
+            try {
+                const response = await fetch(`/api/users/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    window.location.href = '/';
+                } else {
+                    const data = await response.json();
+                    alert('Error: ' + data.message);
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                alert('An error occurred');
+            }
+        });
+    </script>
+</body>
+
+</html>

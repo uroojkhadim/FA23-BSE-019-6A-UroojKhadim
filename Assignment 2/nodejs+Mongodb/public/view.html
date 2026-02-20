@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View User - CRUD App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 500px;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: auto;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        .detail-group {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .value {
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        .btn-edit {
+            background-color: #ffc107;
+            color: black;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-block;
+            width: calc(100% - 40px);
+            text-align: center;
+            margin-left: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>User Details</h1>
+        <div id="userDetails">
+            <div class="detail-group">
+                <span class="label">ID:</span> <span id="id" class="value">Loading...</span>
+            </div>
+            <div class="detail-group">
+                <span class="label">Name:</span> <span id="name" class="value">Loading...</span>
+            </div>
+            <div class="detail-group">
+                <span class="label">Email:</span> <span id="email" class="value">Loading...</span>
+            </div>
+            <div class="detail-group">
+                <span class="label">Age:</span> <span id="age" class="value">Loading...</span>
+            </div>
+            <div class="detail-group">
+                <span class="label">Created At:</span> <span id="createdAt" class="value">Loading...</span>
+            </div>
+        </div>
+        <a id="editBtn" href="#" class="btn-edit" style="display: none;">Edit User</a>
+        <a href="/" class="back-link">Back to List</a>
+    </div>
+
+    <script>
+        const userId = window.location.pathname.split('/').pop();
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch(`/api/users/${userId}`);
+                const user = await response.json();
+
+                document.getElementById('id').textContent = user._id;
+                document.getElementById('name').textContent = user.name;
+                document.getElementById('email').textContent = user.email;
+                document.getElementById('age').textContent = user.age;
+                document.getElementById('createdAt').textContent = new Date(user.createdAt).toLocaleString();
+
+                const editBtn = document.getElementById('editBtn');
+                editBtn.href = `/edit/${user._id}`;
+                editBtn.style.display = 'block';
+            } catch (err) {
+                console.error('Error fetching user:', err);
+                alert('User not found');
+            }
+        });
+    </script>
+</body>
+
+</html>
