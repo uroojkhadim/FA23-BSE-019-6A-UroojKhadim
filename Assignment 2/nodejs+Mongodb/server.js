@@ -15,8 +15,28 @@ app.use(express.static(path.join(__dirname, 'public')));
 const MONGODB_URI = 'mongodb://127.0.0.1:27017/crud_app';
 
 mongoose.connect(MONGODB_URI)
-  .then(() => console.log('MongoDB Connected Successfully'))
-  .catch(err => console.error('MongoDB Connection Error:', err));
+  .then(() => {
+    console.log('-------------------------------');
+    console.log('MongoDB Connected Successfully!');
+    console.log('-------------------------------');
+  })
+  .catch(err => {
+    console.log('-------------------------------');
+    console.error('CRITICAL: MongoDB Connection Error!');
+    console.error('Make sure MongoDB is installed and running.');
+    console.error('Error Details:', err.message);
+    console.log('-------------------------------');
+  });
+
+// Check DB Connection Middleware
+app.use((req, res, next) => {
+  if (mongoose.connection.readyState !== 1 && req.path.startsWith('/api')) {
+    return res.status(503).json({
+      message: 'Database not connected. Please ensure MongoDB is running.'
+    });
+  }
+  next();
+});
 
 // Import Routes
 const userRoutes = require('./routes/userRoutes');

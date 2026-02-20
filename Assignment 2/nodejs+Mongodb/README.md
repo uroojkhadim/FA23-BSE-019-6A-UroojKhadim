@@ -34,4 +34,4 @@ A simple, beginner-friendly CRUD application built with Node.js, Express, Mongoo
     - `create.html`: Add user page.
     - `edit.html`: Edit user page.
     - `view.html`: View user detail page.
-![alt text](image.png)![alt text](image-1.png)
+![alt text](image.png)![alt text](image-1.png)![alt text](image-2.png)
