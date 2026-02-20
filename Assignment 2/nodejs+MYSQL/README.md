@@ -94,14 +94,24 @@ The application will automatically create:
 ## Project Structure
 
 ```
-├── server.js                  # Main server file (MySQL version)
-├── server_file_storage.js     # Alternative server file (file-based storage)
-├── db_setup.js               # Database setup script
-├── package.json              # Dependencies and scripts
-├── .env                      # Environment configuration
-├── data/                     # Directory for file-based storage
-└── public/
-    └── index.html            # Main HTML page with CRUD interface
+├── .env                       # Environment configuration and database credentials
+├── .qoder/                    # Qoder platform specific configuration
+├── PROJECT_SUMMARY.md         # Brief summary of the project goals and setup
+├── README.md                  # Main documentation for the project
+├── TROUBLESHOOTING.md         # Guide for common issues and fixes
+├── data/                      # Directory for file-based JSON storage
+│   └── users.json            # JSON file storing user data for file storage version
+├── db_setup.js                # MySQL database initialization script
+├── node_modules/              # Project dependencies (npm)
+├── package-lock.json          # Pinning project dependencies
+├── package.json               # Project configuration, scripts, and dependencies
+├── public/                    # Static frontend files
+│   └── index.html            # Main UI interface for the application
+├── server.js                  # Backend server using MySQL database
+├── server_file_storage.js     # Backend server using JSON file storage
+├── verify_project.js          # Script to verify project setup and environment
+├── image.png                  # Project screenshot for README
+└── .gitignore                # (Optional) Git ignore file
 ```
 ScreenShot
 ![alt text](image.png)

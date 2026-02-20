@@ -36,14 +36,23 @@ A simple, beginner-friendly CRUD application built with Node.js, Express, Mongoo
 | ![Empty List](image-1.png) |
 
 ## Project Structure
-- `server.js`: Main entry point and server configuration (Express + MongoDB).
-- `models/User.js`: Mongoose schema for the User model.
-- `routes/userRoutes.js`: API endpoints for CRUD operations.
-- `public/`: Static HTML pages for the frontend.
-    - `index.html`: Main page to list all users.
-    - `create.html`: Form to add new users.
-    - `edit.html`: Form to modify existing users.
-    - `view.html`: Detailed view of a single user.
+
+```text
+nodejs+Mongodb/
+├── models/
+│   └── User.js          # Mongoose schema for User
+├── public/              # Static HTML files
+│   ├── index.html       # User list page
+│   ├── create.html      # Add user page
+│   ├── edit.html        # Edit user page
+│   └── view.html        # View individual user page
+├── routes/
+│   └── userRoutes.js    # API endpoints for CRUD
+├── server.js            # Main Express server and DB connection
+├── package.json         # Project dependencies
+└── README.md            # Documentation
+```
+
 
 ## Troubleshooting
 If you see a "Database not connected" message in the UI:
