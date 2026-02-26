@@ -1,0 +1,64 @@
+{
+  "classes": [
+    {
+      "className": "FA23-BSE-6A",
+      "weekly": {
+        "Monday": [
+          { "time": "08:30-09:30", "subject": "DSA", "room": "C-201", "teacher": "Muhammad Abdullah" },
+          { "time": "09:30-10:30", "subject": "DBMS", "room": "C-203", "teacher": "Ayesha Khan" },
+          { "time": "10:45-11:45", "subject": "SE", "room": "C-105", "teacher": "Ali Raza" }
+        ],
+        "Tuesday": [
+          { "time": "08:30-09:30", "subject": "OS", "room": "C-201", "teacher": "Bilal Ahmed" },
+          { "time": "09:30-10:30", "subject": "DSA", "room": "C-203", "teacher": "Muhammad Abdullah" },
+          { "time": "10:45-11:45", "subject": "Maths", "room": "C-105", "teacher": "Zainab Iqbal" }
+        ],
+        "Wednesday": [
+          { "time": "08:30-09:30", "subject": "DBMS", "room": "C-201", "teacher": "Ayesha Khan" },
+          { "time": "09:30-10:30", "subject": "SE", "room": "C-203", "teacher": "Ali Raza" },
+          { "time": "10:45-11:45", "subject": "AI", "room": "C-105", "teacher": "Sara Malik" }
+        ],
+        "Thursday": [
+          { "time": "08:30-09:30", "subject": "SE", "room": "C-201", "teacher": "Ali Raza" },
+          { "time": "09:30-10:30", "subject": "OS", "room": "C-203", "teacher": "Bilal Ahmed" },
+          { "time": "10:45-11:45", "subject": "DSA", "room": "C-105", "teacher": "Muhammad Abdullah" }
+        ],
+        "Friday": [
+          { "time": "08:30-09:30", "subject": "AI", "room": "C-201", "teacher": "Sara Malik" },
+          { "time": "09:30-10:30", "subject": "DBMS", "room": "C-203", "teacher": "Ayesha Khan" },
+          { "time": "10:45-11:45", "subject": "Ethics", "room": "C-105", "teacher": "Hassan Noor" }
+        ]
+      }
+    },
+    {
+      "className": "FA23-BSE-6B",
+      "weekly": {
+        "Monday": [
+          { "time": "08:30-09:30", "subject": "OS", "room": "C-301", "teacher": "Bilal Ahmed" },
+          { "time": "09:30-10:30", "subject": "AI", "room": "C-303", "teacher": "Sara Malik" },
+          { "time": "10:45-11:45", "subject": "Maths", "room": "C-305", "teacher": "Zainab Iqbal" }
+        ],
+        "Tuesday": [
+          { "time": "08:30-09:30", "subject": "DBMS", "room": "C-301", "teacher": "Ayesha Khan" },
+          { "time": "09:30-10:30", "subject": "SE", "room": "C-303", "teacher": "Ali Raza" },
+          { "time": "10:45-11:45", "subject": "AI", "room": "C-305", "teacher": "Sara Malik" }
+        ],
+        "Wednesday": [
+          { "time": "08:30-09:30", "subject": "Ethics", "room": "C-301", "teacher": "Hassan Noor" },
+          { "time": "09:30-10:30", "subject": "OS", "room": "C-303", "teacher": "Bilal Ahmed" },
+          { "time": "10:45-11:45", "subject": "DBMS", "room": "C-305", "teacher": "Ayesha Khan" }
+        ],
+        "Thursday": [
+          { "time": "08:30-09:30", "subject": "Maths", "room": "C-301", "teacher": "Zainab Iqbal" },
+          { "time": "09:30-10:30", "subject": "AI", "room": "C-303", "teacher": "Sara Malik" },
+          { "time": "10:45-11:45", "subject": "SE", "room": "C-305", "teacher": "Ali Raza" }
+        ],
+        "Friday": [
+          { "time": "08:30-09:30", "subject": "DSA", "room": "C-301", "teacher": "Muhammad Abdullah" },
+          { "time": "09:30-10:30", "subject": "OS", "room": "C-303", "teacher": "Bilal Ahmed" },
+          { "time": "10:45-11:45", "subject": "Ethics", "room": "C-305", "teacher": "Hassan Noor" }
+        ]
+      }
+    }
+  ]
+}

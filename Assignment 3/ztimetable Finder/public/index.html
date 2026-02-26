@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Timetable Finder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+    <script>
+      window.addEventListener('DOMContentLoaded', function () {
+        if (window.pdfjsLib) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <div class="bg"></div>
+    <aside class="sidebar">
+      <div class="brand">Smart Timetable Finder</div>
+      <nav class="menu">
+        <a href="#hero" class="menu-item">Dashboard</a>
+        <a href="#search" class="menu-item">Search</a>
+        <a href="#upload" class="menu-item">Upload</a>
+        <a href="#results" class="menu-item">Timetable</a>
+      </nav>
+      <div class="menu-actions">
+        <button id="themeToggle" class="btn-outline">Light</button>
+        <button id="downloadBtn" class="btn-outline">Download PDF</button>
+      </div>
+    </aside>
+    <header class="header">
+      <div class="logo">Smart Timetable Finder</div>
+      <div class="actions">
+        <button id="themeToggleTop" class="btn-outline">Theme</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section id="hero" class="hero card glass">
+        <h1>Find the perfect timetable fast</h1>
+        <p>Search by class or teacher, no manual scanning.</p>
+        <div id="search" class="searchbar">
+          <input id="searchInput" type="text" placeholder="e.g. FA23-BSE-6A or Muhammad Abdullah" />
+          <button id="searchBtn" class="btn-primary">Search</button>
+        </div>
+        <div class="history">
+          <select id="historySelect">
+            <option value="">Search history</option>
+          </select>
+        </div>
+        <div id="spinner" class="spinner hidden"></div>
+      </section>
+
+      <section id="upload" class="upload card glass">
+        <h2>Upload Timetable PDF</h2>
+        <p>Simulated async upload to demonstrate event loop.</p>
+        <div class="uploadbar">
+          <input id="fileInput" type="file" accept="application/pdf" />
+          <button id="uploadBtn" class="btn-secondary">Upload</button>
+        </div>
+        <div id="uploadStatus" class="status"></div>
+      </section>
+
+      <section id="results" class="results card glass">
+        <h2 id="resultsTitle">Timetable</h2>
+        <p id="resultsSubtitle" class="subtitle"></p>
+        <div id="timetableGrid" class="grid"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div>© 2026 Smart Timetable Finder</div>
+    </footer>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script type="module" src="./script.js"></script>
+  </body>
+  </html>
