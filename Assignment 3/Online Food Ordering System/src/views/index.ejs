@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Online Food Ordering</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header>
+  <h1><a href="/">Online Food Ordering</a></h1>
+</header>
+<main>
+  <section>
+    <h2>Restaurants</h2>
+    <div class="grid">
+      <% restaurants.forEach(r => { %>
+        <a class="card" href="/restaurants/<%= r.id %>">
+          <h3><%= r.name %></h3>
+          <p><%= r.cuisine %></p>
+        </a>
+      <% }) %>
+    </div>
+  </section>
+</main>
+<footer>
+  <p>© <%= new Date().getFullYear() %> Online Food Ordering</p>
+</footer>
+</body>
+</html>

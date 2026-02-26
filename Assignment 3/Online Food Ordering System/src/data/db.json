@@ -1,0 +1,135 @@
+{
+  "users": [],
+  "restaurants": [
+    {
+      "id": "r1",
+      "name": "Spice Hub",
+      "cuisine": "Indian"
+    },
+    {
+      "id": "r2",
+      "name": "Pasta Palace",
+      "cuisine": "Italian"
+    }
+  ],
+  "menuItems": [
+    {
+      "id": "m1",
+      "restaurantId": "r1",
+      "name": "Chicken Biryani",
+      "price": 6.99
+    },
+    {
+      "id": "m2",
+      "restaurantId": "r1",
+      "name": "Paneer Tikka",
+      "price": 5.49
+    },
+    {
+      "id": "m3",
+      "restaurantId": "r2",
+      "name": "Spaghetti Carbonara",
+      "price": 7.99
+    },
+    {
+      "id": "m4",
+      "restaurantId": "r2",
+      "name": "Margherita Pizza",
+      "price": 8.49
+    }
+  ],
+  "orders": [
+    {
+      "id": "690ebdef-eaf4-48e8-acce-364c9b9575f9",
+      "customerName": "Urooj Khadim",
+      "address": "vehari",
+      "restaurantId": "r2",
+      "items": [
+        {
+          "id": "m3",
+          "name": "Spaghetti Carbonara",
+          "price": 7.99,
+          "quantity": 1
+        },
+        {
+          "id": "m4",
+          "name": "Margherita Pizza",
+          "price": 8.49,
+          "quantity": 2
+        }
+      ],
+      "total": 24.97,
+      "status": "placed",
+      "createdAt": "2026-02-26T14:33:47.311Z"
+    },
+    {
+      "id": "be40e5ed-241a-4361-8d28-21cbcd014ed1",
+      "customerName": "Urooj Khadim",
+      "address": "vehari",
+      "restaurantId": "r2",
+      "items": [
+        {
+          "id": "m3",
+          "name": "Spaghetti Carbonara",
+          "price": 7.99,
+          "quantity": 1
+        },
+        {
+          "id": "m4",
+          "name": "Margherita Pizza",
+          "price": 8.49,
+          "quantity": 2
+        }
+      ],
+      "total": 24.97,
+      "status": "placed",
+      "createdAt": "2026-02-26T14:35:53.031Z"
+    },
+    {
+      "id": "f7c5eb68-1a81-47ad-a848-653b65b93fde",
+      "customerName": "Urooj Khadim",
+      "address": "vehari",
+      "restaurantId": "r1",
+      "items": [
+        {
+          "id": "m1",
+          "name": "Chicken Biryani",
+          "price": 6.99,
+          "quantity": 1
+        },
+        {
+          "id": "m2",
+          "name": "Paneer Tikka",
+          "price": 5.49,
+          "quantity": 1
+        }
+      ],
+      "total": 12.48,
+      "status": "placed",
+      "createdAt": "2026-02-26T14:43:35.205Z"
+    },
+    {
+      "id": "a1918994-54ee-4dfb-9be7-0d19ab414d64",
+      "customerName": "Urooj Khadim",
+      "address": "vehari",
+      "restaurantId": "r1",
+      "items": [
+        {
+          "id": "m1",
+          "name": "Chicken Biryani",
+          "price": 6.99,
+          "quantity": 2
+        },
+        {
+          "id": "m2",
+          "name": "Paneer Tikka",
+          "price": 5.49,
+          "quantity": 3
+        }
+      ],
+      "total": 30.45,
+      "status": "placed",
+      "createdAt": "2026-02-26T14:44:59.919Z"
+    }
+  ]
+}

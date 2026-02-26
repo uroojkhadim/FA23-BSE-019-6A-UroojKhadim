@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Order Placed • Online Food Ordering</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header>
+  <h1><a href="/">Online Food Ordering</a></h1>
+</header>
+<main>
+  <section>
+    <h2>Order Placed</h2>
+    <p>Order ID: <strong><%= order.id %></strong></p>
+    <p>Total: RS <%= order.total.toFixed(2) %></p>
+    <h3>Items</h3>
+    <ul>
+      <% order.items.forEach(i => { %>
+        <li><%= i.quantity %> × <%= i.name %> (RS <%= i.price.toFixed(2) %>)</li>
+      <% }) %>
+    </ul>
+    <a href="/">Back to home</a>
+    <p>API: GET /api/orders/<%= order.id %></p>
+  </section>
+</main>
+<footer>
+  <p>© <%= new Date().getFullYear() %> Online Food Ordering</p>
+</footer>
+</body>
+</html>
