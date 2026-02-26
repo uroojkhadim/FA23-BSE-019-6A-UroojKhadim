@@ -10,16 +10,19 @@ Scalable Application Architecture using MVC and `express.Router`. This lab demon
 ## Folder Structure
 ```
 project-folder/
-  app.js
-  routes/
-    products.js
-    users.js
-  controllers/
-    productController.js
-    userController.js
-  middleware/
-    logger.js
-    auth.js
+  app.js                      // Main entry: bootstraps Express, uses JSON parser,
+                              // applies global logger, mounts routers, starts server
+  routes/                     // Feature-specific routers (modular and scalable)
+    products.js               // GET /products → delegates to product controller
+    users.js                  // GET /users/:id, POST /users (auth-protected routes)
+  controllers/                // Business logic ("chefs") separated from routing
+    productController.js      // Returns dummy product array
+    userController.js         // Demonstrates req.params and req.body handling
+  middleware/                 // Cross-cutting concerns ("waiters")
+    logger.js                 // Logs method + URL for every request
+    auth.js                   // Simulated token check for /users routes only
+  package.json                // Project metadata and scripts
+  README.md                   // Setup, usage, architecture notes
 ```
 
 ## Quick Start
@@ -79,4 +82,3 @@ Any unknown path returns:
 ```
 Screenshot
 ![alt text](image.png)
-
