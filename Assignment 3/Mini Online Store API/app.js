@@ -14,6 +14,7 @@
 // - Scales better as features grow
 
 const express = require('express');
+const path = require('path');
 const logger = require('./middleware/logger');
 const auth = require('./middleware/auth');
 const productsRouter = require('./routes/products');
@@ -21,15 +22,19 @@ const usersRouter = require('./routes/users');
 
 const app = express();
 
-// Built-in middleware to parse JSON bodies
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 // Apply logger globally
 app.use(logger);
 
+const viewsRouter = require('./routes/views');
 // Mount routers
 app.use('/products', productsRouter);
 app.use('/users', auth, usersRouter);
+app.use('/views', viewsRouter);
 
 // 404 Not Found handler
 app.use((req, res) => {
