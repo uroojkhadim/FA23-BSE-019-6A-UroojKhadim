@@ -80,5 +80,3 @@ Any unknown path returns:
 ```
 { "error": "Not Found" }
 ```
-Screenshot
-![alt text](image.png)
