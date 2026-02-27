@@ -7,7 +7,6 @@
 //
 // Simulation details:
 // - Expects an Authorization header: "Bearer demo-token"
-// - Adjust the token as needed for exercises
 
 function auth(req, res, next) {
   const authHeader = req.headers['authorization'] || '';
@@ -17,7 +16,6 @@ function auth(req, res, next) {
     return res.status(401).json({ error: 'Unauthorized: missing or invalid token' });
   }
 
-  // Attach a simulated user to the request for downstream handlers
   req.user = { id: 42, role: 'student' };
   next();
 }
