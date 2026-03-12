@@ -76,3 +76,28 @@ A simple RESTful API for managing customers, products, and orders built with Nod
 - `models/`: Mongoose schemas
 - `routes/`: API endpoint definitions
 - `server.js`: Application entry point
+screem shots of output
+![alt text](image.png)
+![alt text](image-1.png)
+![alt text](image-2.png)
+![alt text](<Screenshot 2026-03-12 231708.png>)
+Project structure
+project-folder
+│
+├── config
+│   └── db.js
+├── models
+│   ├── Customer.js
+│   ├── Product.js
+│   └── Order.js
+├── routes
+│   ├── customerRoutes.js
+│   ├── productRoutes.js
+│   └── orderRoutes.js
+├── controllers
+│   ├── customerController.js
+│   ├── productController.js
+│   └── orderController.js
+├── server.js
+├── package.json
+└── .env
