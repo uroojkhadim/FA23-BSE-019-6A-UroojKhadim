@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { toast } from 'react-toastify';
 
 const CartContext = createContext();
 
@@ -6,9 +7,17 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
 
   const addToCart = (item) => {
+    if (item.stock === 0) {
+      toast.error('Item is currently out of stock');
+      return;
+    }
     setCart(prev => {
       const existing = prev.find(i => i.id === item.id);
       if (existing) {
+        if (existing.quantity >= item.stock) {
+          toast.warning('Maximum available stock reached');
+          return prev;
+        }
         return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
       }
       return [...prev, { ...item, quantity: 1 }];

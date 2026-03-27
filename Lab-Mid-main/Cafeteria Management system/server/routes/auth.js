@@ -1,70 +1,50 @@
-import express from 'express'
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
-import db from '../db.js'
+import express from 'express';
+import jwt from 'jsonwebtoken';
+import { query } from '../db.js';
 
-const router = express.Router()
+const router = express.Router();
 
 // Register
 router.post('/register', async (req, res) => {
-  const { name, email, password, role, rollNo, whatsapp } = req.body
-  
-  await db.read()
-  const userExists = db.data.users.find(u => u.email === email)
-  
-  if (userExists) {
-    return res.status(400).json({ message: 'User already exists' })
+  const { name, email, password, role } = req.body;
+  try {
+    const result = await query(
+      'INSERT INTO users (name, email, password, role, wallet_balance) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, email, role, wallet_balance',
+      [name, email, password, role || 'student', 0]
+    );
+    const user = result.rows[0];
+    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET || 'secret');
+    res.status(201).json({ token, user: { ...user, walletBalance: user.wallet_balance } });
+  } catch (err) {
+    res.status(400).json({ message: 'Registration failed: ' + err.message });
   }
-
-  const hashedPassword = await bcrypt.hash(password, 10)
-  const newUser = {
-    id: Date.now().toString(),
-    name,
-    email,
-    password: hashedPassword,
-    role: role || 'student', // student, teacher, admin, staff
-    rollNo: rollNo || '',
-    whatsapp: whatsapp || '',
-    createdAt: new Date().toISOString()
-  }
-
-  db.data.users.push(newUser)
-  await db.write()
-
-  res.status(201).json({ message: 'User registered successfully' })
-})
+});
 
 // Login
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body
-  
-  await db.read()
-  const user = db.data.users.find(u => u.email === email)
-  
-  if (!user) {
-    return res.status(400).json({ message: 'Invalid credentials' })
-  }
+  const { email, password } = req.body;
+  try {
+    const result = await query('SELECT * FROM users WHERE email = $1', [email]);
+    const user = result.rows[0];
 
-  const isMatch = await bcrypt.compare(password, user.password)
-  if (!isMatch) {
-    return res.status(400).json({ message: 'Invalid credentials' })
-  }
-
-  const token = jwt.sign(
-    { id: user.id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: '1d' }
-  )
-
-  res.json({
-    token,
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role
+    if (!user || user.password !== password) {
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
-  })
-})
 
-export default router
+    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET || 'secret');
+    res.json({ 
+      token, 
+      user: { 
+        id: user.id, 
+        name: user.name, 
+        email: user.email, 
+        role: user.role, 
+        walletBalance: user.wallet_balance 
+      } 
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+export default router;

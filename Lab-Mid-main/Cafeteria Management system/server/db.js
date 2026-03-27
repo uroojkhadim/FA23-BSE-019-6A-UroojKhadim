@@ -1,23 +1,20 @@
-import { JSONFilePreset } from 'lowdb/node'
+import pkg from 'pg';
+const { Pool } = pkg;
+import dotenv from 'dotenv';
 
-// Initialize lowdb with a default structure
-const defaultData = { 
-  users: [], 
-  menu: [
-    { id: 1, name: 'Coffee', price: 150, category: 'Beverages' },
-    { id: 2, name: 'Burger', price: 350, category: 'Fast Food' },
-    { id: 3, name: 'Pizza', price: 800, category: 'Fast Food' },
-    { id: 4, name: 'Tea', price: 80, category: 'Beverages' }
-  ], 
-  orders: [],
-  settings: {
-    discounts: {
-      student: 10, // 10% discount
-      teacher: 5  // 5% discount
-    }
-  }
-}
+dotenv.config();
 
-const db = await JSONFilePreset('db.json', defaultData)
+// PostgreSQL Connection Pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/elite_cafe',
+});
 
-export default db
+// Helper for SQL Queries
+export const query = (text, params) => pool.query(text, params);
+
+// Legacy LowDB Support (to be phased out during migration)
+import { JSONFilePreset } from 'lowdb/node';
+const defaultData = { users: [], menu: [], orders: [] };
+const db = await JSONFilePreset('db.json', defaultData);
+
+export default db; 

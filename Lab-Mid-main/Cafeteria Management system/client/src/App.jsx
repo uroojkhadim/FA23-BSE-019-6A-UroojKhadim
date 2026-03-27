@@ -14,6 +14,9 @@ import Checkout from './pages/Checkout.jsx';
 import UserDashboard from './pages/UserDashboard.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import POS from './pages/POS.jsx';
+import Landing from './pages/Landing.jsx';
+import About from './pages/About.jsx';
+import Contact from './pages/Contact.jsx';
 
 import Navbar from './components/Navbar.jsx';
 
@@ -62,10 +65,15 @@ function AnimatedRoutes() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
+        {/* Public Landing & Website Pages */}
+        <Route path="/" element={<PageWrapper><Navbar /><Landing /></PageWrapper>} />
+        <Route path="/about" element={<PageWrapper><Navbar /><About /></PageWrapper>} />
+        <Route path="/contact" element={<PageWrapper><Navbar /><Contact /></PageWrapper>} />
+        
         <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
         <Route path="/register" element={<PageWrapper><Register /></PageWrapper>} />
         
-        <Route path="/" element={
+        <Route path="/home" element={
           <PrivateRoute>
             <Home />
           </PrivateRoute>
