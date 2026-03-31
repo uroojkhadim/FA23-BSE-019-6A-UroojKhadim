@@ -23,10 +23,15 @@ const formatPhoneNumber = (number) => {
  * @route   POST /api/whatsapp/send-otp
  */
 export const sendOTP = async (req, res) => {
-  const { phoneNumber } = req.body;
+  const { phoneNumber, role } = req.body;
 
   if (!phoneNumber) {
     return res.status(400).json({ success: false, message: 'Phone number is required.' });
+  }
+
+  // Basic validation for role (Student, Teacher, Admin)
+  if (!role) {
+    return res.status(400).json({ success: false, message: 'User role is required (Student, Teacher, or Admin).' });
   }
 
   const formattedNumber = formatPhoneNumber(phoneNumber);
@@ -35,8 +40,8 @@ export const sendOTP = async (req, res) => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const expiry = Date.now() + 5 * 60 * 1000; // 5 minutes expiry
 
-  // 2. Store OTP
-  otpStore[formattedNumber] = { otp, expiry };
+  // 2. Store OTP and Role
+  otpStore[formattedNumber] = { otp, expiry, role };
 
   // 3. Meta API Configuration
   const accessToken = process.env.META_ACCESS_TOKEN;
@@ -122,11 +127,13 @@ export const verifyOTP = async (req, res) => {
   }
 
   // 4. Success - Clear stored OTP
+  const userRole = storedData.role;
   delete otpStore[formattedNumber];
 
   return res.status(200).json({
     success: true,
-    message: 'Phone number verified successfully!'
+    message: 'Phone number verified successfully!',
+    role: userRole
   });
 };
 

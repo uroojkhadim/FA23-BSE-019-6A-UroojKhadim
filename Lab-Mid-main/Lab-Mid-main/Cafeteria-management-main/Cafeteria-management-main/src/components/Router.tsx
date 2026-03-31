@@ -10,6 +10,8 @@ import POSPage from '@/components/pages/POSPage';
 import AdminPage from '@/components/pages/AdminPage';
 import LoginPage from '@/components/pages/LoginPage';
 import RegisterPage from '@/components/pages/RegisterPage';
+import PhoneLoginPage from '@/components/pages/PhoneLoginPage';
+import DashboardPage from '@/components/pages/DashboardPage';
 import RoleRoute from '@/components/RoleRoute';
 
 // Layout component that includes ScrollToTop
@@ -73,8 +75,16 @@ const router = createBrowserRouter([
         element: <LoginPage />,
       },
       {
+        path: "phone-login",
+        element: <PhoneLoginPage />,
+      },
+      {
         path: "register",
         element: <RegisterPage />,
+      },
+      {
+        path: "dashboard",
+        element: <DashboardPage />,
       },
       {
         path: "*",
