@@ -5,11 +5,10 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { BaseCrudService } from '@/integrations';
 import { Students, Teachers, Administrators } from '@/entities';
-import { usePhoneAuth } from '@/hooks/use-phone-auth';
+import axios from 'axios';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const { sendOtp, verifyOtp, loading: isPhoneLoading } = usePhoneAuth();
   const [role, setRole] = useState<'student' | 'teacher' | 'admin'>('student');
   const [formData, setFormData] = useState({
     fullName: '',
@@ -73,13 +72,28 @@ export default function RegisterPage() {
 
     setIsSendingCode(true);
     try {
-      const success = await sendOtp(formData.phoneNumber, 'recaptcha-container');
-      if (success) {
+      // Use backend WhatsApp API
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/whatsapp/send-otp`, {
+        phoneNumber: formData.phoneNumber,
+        role: role.toUpperCase()
+      });
+      
+      if (response.data.success) {
         setCodeSent(true);
         setPhoneVerified(false);
+        setSuccess('Verification code sent to your WhatsApp number!');
       }
-    } catch (sendError) {
-      setError(sendError instanceof Error ? sendError.message : 'Failed to send verification code.');
+    } catch (sendError: any) {
+      console.error('Send OTP Error:', sendError);
+      const errorMessage = sendError.response?.data?.message || sendError.message || 'Failed to send verification code.';
+      setError(errorMessage);
+      
+      // Fallback: For testing, allow manual bypass
+      if (import.meta.env.DEV) {
+        console.log('DEV MODE: Check backend console for OTP');
+        setCodeSent(true);
+        setSuccess('DEV MODE: Check backend server console for OTP code');
+      }
     } finally {
       setIsSendingCode(false);
     }
@@ -101,13 +115,19 @@ export default function RegisterPage() {
 
     setIsVerifyingCode(true);
     try {
-      const user = await verifyOtp(verificationCode.trim());
-      if (user) {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/whatsapp/verify-otp`, {
+        phoneNumber: formData.phoneNumber,
+        otp: verificationCode.trim()
+      });
+      
+      if (response.data.success) {
         setPhoneVerified(true);
-        setSuccess('Phone number verified successfully.');
+        setSuccess('Phone number verified successfully!');
       }
-    } catch (verifyError) {
-      setError(verifyError instanceof Error ? verifyError.message : 'Failed to verify code.');
+    } catch (verifyError: any) {
+      console.error('Verify Error:', verifyError);
+      const errorMessage = verifyError.response?.data?.message || verifyError.message || 'Failed to verify code.';
+      setError(errorMessage);
     } finally {
       setIsVerifyingCode(false);
     }
@@ -337,8 +357,8 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={handleSendVerificationCode}
-                    disabled={isSendingCode || isPhoneLoading}
-                    className="px-4 py-3 bg-transparent border border-secondary rounded-lg font-paragraph text-sm uppercase tracking-wide hover:border-primary transition-colors"
+                    disabled={isSendingCode}
+                    className="px-4 py-3 bg-transparent border border-secondary rounded-lg font-paragraph text-sm uppercase tracking-wide hover:border-primary transition-colors disabled:opacity-50"
                   >
                     {isSendingCode ? 'Sending...' : 'Send Verification Code'}
                   </button>
@@ -348,19 +368,19 @@ export default function RegisterPage() {
                     onChange={(e) => setVerificationCode(e.target.value)}
                     placeholder="Enter 6-digit code"
                     className="flex-1 px-4 py-3 border border-secondary rounded-lg font-paragraph text-base focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    disabled={!codeSent}
                   />
                   <button
                     type="button"
                     onClick={handleVerifyPhone}
-                    disabled={isVerifyingCode || isPhoneLoading}
-                    className="px-4 py-3 bg-primary text-primary-foreground rounded-lg font-paragraph text-sm uppercase tracking-wide hover:bg-slate-800 transition-colors"
+                    disabled={isVerifyingCode || !codeSent}
+                    className="px-4 py-3 bg-primary text-primary-foreground rounded-lg font-paragraph text-sm uppercase tracking-wide hover:bg-slate-800 transition-colors disabled:opacity-50"
                   >
                     {isVerifyingCode ? 'Verifying...' : 'Verify'}
                   </button>
                 </div>
-                <div id="recaptcha-container"></div>
                 <p className={`font-paragraph text-xs ${phoneVerified ? 'text-green-700' : 'text-secondary-foreground'}`}>
-                  {phoneVerified ? 'Phone verified via Firebase' : 'Verification is required before account creation.'}
+                  {phoneVerified ? '✓ Phone verified via WhatsApp' : 'We will send a verification code to your WhatsApp number'}
                 </p>
               </div>
 
