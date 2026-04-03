@@ -11,6 +11,10 @@ import { useAuthStore } from '@/store/authStore';
 import { formatPaymentMethod } from '@/lib/payments';
 import { parseOrderNotes } from '@/lib/orderWorkflow';
 import { getOrderStatusLabel, normalizeOrderStatus } from '@/lib/orderStatus';
+import {
+  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+} from 'recharts';
 
 type TabType = 'menu' | 'reports' | 'discounts' | 'stock' | 'staff';
 
@@ -205,6 +209,61 @@ export default function AdminPage() {
       channel: 'Email / WhatsApp',
     })),
   ];
+
+  // Prepare chart data
+  const prepareRevenueByDayData = () => {
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const revenueByDay: Record<string, number> = {};
+    
+    orders.forEach(order => {
+      if (order.isPaid && order.orderTime) {
+        const date = new Date(order.orderTime);
+        const dayName = dayNames[date.getDay()];
+        revenueByDay[dayName] = (revenueByDay[dayName] || 0) + (order.totalPrice || 0);
+      }
+    });
+
+    return dayNames.map(day => ({
+      day,
+      revenue: revenueByDay[day] || 0,
+    }));
+  };
+
+  const prepareOrderStatusData = () => {
+    const statusCounts: Record<string, number> = {};
+    orders.forEach(order => {
+      const status = getOrderStatusLabel(normalizeOrderStatus(order.status));
+      statusCounts[status] = (statusCounts[status] || 0) + 1;
+    });
+
+    return Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
+  };
+
+  const preparePaymentMethodData = () => {
+    return Object.entries(paymentMethodSummary).map(([method, data]) => ({
+      method: formatPaymentMethod(method),
+      count: data.count,
+      amount: data.amount,
+    }));
+  };
+
+  const prepareCategoryRevenueData = () => {
+    // Since Orders don't have items field, we'll use menu items directly
+    const categoryRevenue: Record<string, number> = {};
+    
+    menuItems.forEach(item => {
+      if (item.category && item.itemPrice) {
+        categoryRevenue[item.category] = (categoryRevenue[item.category] || 0) + item.itemPrice;
+      }
+    });
+
+    return Object.entries(categoryRevenue).map(([category, revenue]) => ({
+      category,
+      revenue,
+    }));
+  };
+
+  const COLORS = ['#1e293b', '#64748b', '#94a3b8', '#cbd5e1', '#475569', '#334155'];
 
   return (
     <div className="min-h-screen bg-background">
@@ -543,6 +602,139 @@ export default function AdminPage() {
                       {stats.activeOrders}
                     </p>
                   </div>
+                </motion.div>
+              </div>
+
+              {/* Charts Section */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                {/* Revenue by Day Chart */}
+                <motion.div
+                  className="border border-secondary p-6 rounded-lg"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.4 }}
+                >
+                  <h3 className="font-heading text-lg text-foreground uppercase mb-6">
+                    Revenue by Day of Week
+                  </h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={prepareRevenueByDayData()}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
+                      <XAxis dataKey="day" tick={{ fill: '#1e293b' }} angle={-45} textAnchor="end" height={80} />
+                      <YAxis tick={{ fill: '#1e293b' }} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'white',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Legend />
+                      <Bar dataKey="revenue" fill="#1e293b" name="Revenue (PKR)" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </motion.div>
+
+                {/* Order Status Distribution */}
+                <motion.div
+                  className="border border-secondary p-6 rounded-lg"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.5 }}
+                >
+                  <h3 className="font-heading text-lg text-foreground uppercase mb-6">
+                    Order Status Distribution
+                  </h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={prepareOrderStatusData()}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {prepareOrderStatusData().map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'white',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </motion.div>
+
+                {/* Payment Methods Chart */}
+                <motion.div
+                  className="border border-secondary p-6 rounded-lg"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.6 }}
+                >
+                  <h3 className="font-heading text-lg text-foreground uppercase mb-6">
+                    Payment Methods Usage
+                  </h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={preparePaymentMethodData()}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
+                      <XAxis dataKey="method" tick={{ fill: '#1e293b' }} angle={-45} textAnchor="end" height={80} />
+                      <YAxis yAxisId="left" orientation="left" stroke="#1e293b" />
+                      <YAxis yAxisId="right" orientation="right" stroke="#64748b" />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'white',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Legend />
+                      <Bar yAxisId="left" dataKey="count" fill="#1e293b" name="Number of Transactions" />
+                      <Bar yAxisId="right" dataKey="amount" fill="#94a3b8" name="Total Amount (PKR)" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </motion.div>
+
+                {/* Category Revenue */}
+                <motion.div
+                  className="border border-secondary p-6 rounded-lg"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.7 }}
+                >
+                  <h3 className="font-heading text-lg text-foreground uppercase mb-6">
+                    Revenue by Category
+                  </h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={prepareCategoryRevenueData()}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
+                      <XAxis dataKey="category" tick={{ fill: '#1e293b' }} />
+                      <YAxis tick={{ fill: '#1e293b' }} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'white',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Legend />
+                      <Area 
+                        type="monotone" 
+                        dataKey="revenue" 
+                        stroke="#1e293b" 
+                        fill="#e2e8f0" 
+                        name="Revenue (PKR)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </motion.div>
               </div>
 
