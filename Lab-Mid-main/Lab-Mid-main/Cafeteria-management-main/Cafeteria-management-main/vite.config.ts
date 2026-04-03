@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import { fileURLToPath, URL } from "node:url";
 
 export default defineConfig({
+  base: '/',
   server: {
     proxy: {
       "/api": {
@@ -21,5 +22,9 @@ export default defineConfig({
         replacement: fileURLToPath(new URL("./src", import.meta.url)),
       },
     ],
+  },
+  build: {
+    outDir: 'build',
+    sourcemap: true,
   },
 });
