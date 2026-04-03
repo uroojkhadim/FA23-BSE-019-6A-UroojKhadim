@@ -77,3 +77,12 @@ The system utilizes a **Glassmorphic** design language, characterized by:
 - Deep dark backgrounds with translucent overlays.
 - Dynamic HSL color system (Vibrant Primary vs Elegant Accents).
 - Smooth micro-animations for enhanced user engagement.
+  ## Screenshots
+  <img width="1354" height="632" alt="Screenshot 2026-04-03 092217" src="https://github.com/user-attachments/assets/7e7ce6c9-f8a5-46ac-ab66-eaccf5b1d5b2" /><img width="1356" height="630" alt="Screenshot 2026-04-03 093507" src="https://github.com/user-attachments/assets/e30e1710-0f40-49d5-b5cc-5b0d85170da2" /><img width="1338" height="633" alt="Screenshot 2026-04-03 093444" src="https://github.com/user-attachments/assets/ea2d3517-dab6-4749-8d06-6cde7099e456" /><img width="1357" height="636" alt="Screenshot 2026-04-03 093418" src="https://github.com/user-attachments/assets/a6e50ce7-35d0-47b4-8df3-929ca348d567" /><img width="1356" height="633" alt="Screenshot 2026-04-03 093527" src="https://github.com/user-attachments/assets/d7109089-e021-414e-b950-751332e0f5b7" /><img width="1350" height="633" alt="Screenshot 2026-04-03 093552" src="https://github.com/user-attachments/assets/623fa8ee-3c71-474a-90af-0f4974fcd7c4" /><img width="426" height="632" alt="image" src="https://github.com/user-attachments/assets/fb175c24-e242-4dab-a720-ce38f1b47946" />
+
+
+
+
+
+
+
