@@ -90,9 +90,9 @@ export default function LoginPage() {
         if (dbUser) {
           // Set user in auth store
           setUser({
-            id: (dbUser as any).id,
+            _id: (dbUser as any)._id || (dbUser as any).id || '',
             email: dbUser.email,
-            fullName: (dbUser as any).fullName || dbUser.name,
+            fullName: (dbUser as any).fullName || (dbUser as any).name || 'User',
             role: role,
           });
 
