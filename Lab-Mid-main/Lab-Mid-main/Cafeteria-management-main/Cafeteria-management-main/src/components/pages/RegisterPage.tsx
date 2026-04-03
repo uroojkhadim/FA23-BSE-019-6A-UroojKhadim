@@ -194,41 +194,41 @@ export default function RegisterPage() {
           {/* Glassmorphic Card */}
           <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl border border-white/20 p-8">
             <div className="text-center mb-8">
-              <h1 className="font-bold text-3xl mb-2 text-primary-foreground">Create Your Account</h1>
-              <p className="font-paragraph text-sm text-primary-foreground/80">
+              <h1 className="font-bold text-3xl mb-2 text-black">Create Your Account</h1>
+              <p className="font-paragraph text-sm text-black/80">
                 Join our cafeteria management system
               </p>
             </div>
 
             {error && (
               <div className="mb-6 p-4 bg-red-500/20 backdrop-blur-sm border border-red-500/50 rounded-lg flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-300 flex-shrink-0 mt-0.5" />
-                <p className="font-paragraph text-sm text-red-100">{error}</p>
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="font-paragraph text-sm text-black">{error}</p>
               </div>
             )}
 
             {success && (
               <div className="mb-6 p-4 bg-green-500/20 backdrop-blur-sm border border-green-500/50 rounded-lg flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-green-300 flex-shrink-0 mt-0.5" />
-                <p className="font-paragraph text-sm text-green-100">{success}</p>
+                <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <p className="font-paragraph text-sm text-black">{success}</p>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Full Name */}
               <div className="space-y-3">
-                <label className="font-paragraph text-sm uppercase tracking-wide text-primary-foreground mb-2 block">
+                <label className="font-paragraph text-sm uppercase tracking-wide text-black mb-2 block">
                   Full Name *
                 </label>
                 <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-foreground/70" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600" />
                   <input
                     type="text"
                     name="fullName"
                     value={formData.fullName}
                     onChange={handleInputChange}
                     placeholder="Enter your full name"
-                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg font-paragraph text-base text-primary-foreground placeholder:text-primary-foreground/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-white/50 border border-gray-300 rounded-lg font-paragraph text-base text-black placeholder:text-gray-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                     required
                   />
                 </div>
@@ -236,18 +236,18 @@ export default function RegisterPage() {
 
               {/* Email */}
               <div className="space-y-3">
-                <label className="font-paragraph text-sm uppercase tracking-wide text-primary-foreground mb-2 block">
+                <label className="font-paragraph text-sm uppercase tracking-wide text-black mb-2 block">
                   Email Address *
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-foreground/70" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600" />
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="your.email@example.com"
-                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg font-paragraph text-base text-primary-foreground placeholder:text-primary-foreground/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-white/50 border border-gray-300 rounded-lg font-paragraph text-base text-black placeholder:text-gray-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                     required
                   />
                 </div>
@@ -255,18 +255,18 @@ export default function RegisterPage() {
 
               {/* Password */}
               <div className="space-y-3">
-                <label className="font-paragraph text-sm uppercase tracking-wide text-primary-foreground mb-2 block">
+                <label className="font-paragraph text-sm uppercase tracking-wide text-black mb-2 block">
                   Password *
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-foreground/70" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600" />
                   <input
                     type="password"
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
                     placeholder="At least 6 characters"
-                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg font-paragraph text-base text-primary-foreground placeholder:text-primary-foreground/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-white/50 border border-gray-300 rounded-lg font-paragraph text-base text-black placeholder:text-gray-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                     required
                     minLength={6}
                   />
@@ -275,18 +275,18 @@ export default function RegisterPage() {
 
               {/* Confirm Password */}
               <div className="space-y-3">
-                <label className="font-paragraph text-sm uppercase tracking-wide text-primary-foreground mb-2 block">
+                <label className="font-paragraph text-sm uppercase tracking-wide text-black mb-2 block">
                   Confirm Password *
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-foreground/70" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600" />
                   <input
                     type="password"
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     placeholder="Re-enter your password"
-                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg font-paragraph text-base text-primary-foreground placeholder:text-primary-foreground/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-white/50 border border-gray-300 rounded-lg font-paragraph text-base text-black placeholder:text-gray-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                     required
                     minLength={6}
                   />
@@ -295,14 +295,14 @@ export default function RegisterPage() {
 
               {/* Role Selection */}
               <div className="space-y-3">
-                <label className="font-paragraph text-sm uppercase tracking-wide text-primary-foreground mb-2 block">
+                <label className="font-paragraph text-sm uppercase tracking-wide text-black mb-2 block">
                   Select Role *
                 </label>
                 <select
                   name="role"
                   value={role}
                   onChange={(e) => setRole(e.target.value as 'student' | 'teacher' | 'admin')}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg font-paragraph text-base text-primary-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
+                  className="w-full px-4 py-3 bg-white/50 border border-gray-300 rounded-lg font-paragraph text-base text-black focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
                   required
                 >
                   <option value="" disabled>Select your role</option>
@@ -315,7 +315,7 @@ export default function RegisterPage() {
               {/* Role-Specific Fields */}
               {role === 'student' && (
                 <div className="space-y-3">
-                  <label className="font-paragraph text-sm uppercase tracking-wide text-primary-foreground mb-2 block">
+                  <label className="font-paragraph text-sm uppercase tracking-wide text-black mb-2 block">
                     Registration Number *
                   </label>
                   <input
@@ -324,7 +324,7 @@ export default function RegisterPage() {
                     value={formData.registrationNumber}
                     onChange={handleInputChange}
                     placeholder="e.g., FA23-BSE-001"
-                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg font-paragraph text-base text-primary-foreground placeholder:text-primary-foreground/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    className="w-full px-4 py-3 bg-white/50 border border-gray-300 rounded-lg font-paragraph text-base text-black placeholder:text-gray-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                     required
                   />
                 </div>
@@ -332,14 +332,14 @@ export default function RegisterPage() {
 
               {role === 'teacher' && (
                 <div className="space-y-3">
-                  <label className="font-paragraph text-sm uppercase tracking-wide text-primary-foreground mb-2 block">
+                  <label className="font-paragraph text-sm uppercase tracking-wide text-black mb-2 block">
                     Department *
                   </label>
                   <select
                     name="department"
                     value={formData.department}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg font-paragraph text-base text-primary-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    className="w-full px-4 py-3 bg-white/50 border border-gray-300 rounded-lg font-paragraph text-base text-black focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                     required
                   >
                     <option value="">Select Department</option>
@@ -353,14 +353,14 @@ export default function RegisterPage() {
 
               {role === 'admin' && (
                 <div className="space-y-3">
-                  <label className="font-paragraph text-sm uppercase tracking-wide text-primary-foreground mb-2 block">
+                  <label className="font-paragraph text-sm uppercase tracking-wide text-black mb-2 block">
                     Admin Role *
                   </label>
                   <select
                     name="adminRole"
                     value={formData.adminRole}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg font-paragraph text-base text-primary-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    className="w-full px-4 py-3 bg-white/50 border border-gray-300 rounded-lg font-paragraph text-base text-black focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                     required
                   >
                     <option value="">Select Admin Role</option>
@@ -375,13 +375,13 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 bg-primary text-primary-foreground rounded-lg font-paragraph text-base uppercase tracking-wide hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                className="w-full py-4 bg-primary text-white rounded-lg font-paragraph text-base uppercase tracking-wide hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
               >
                 {loading ? 'Registering...' : 'Register'}
               </button>
 
               {/* Login Link */}
-              <p className="font-paragraph text-sm text-center text-primary-foreground/70">
+              <p className="font-paragraph text-sm text-center text-black/70">
                 Already have an account?{' '}
                 <Link to="/login" className="text-primary font-semibold hover:underline">
                   Login here

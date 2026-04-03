@@ -1,219 +1,252 @@
-import jwt from 'jsonwebtoken';
 import Student from '../models/Student.js';
 import Teacher from '../models/Teacher.js';
 import Administrator from '../models/Administrator.js';
+import { sendPendingPaymentEmail, sendOrderStatusUpdateEmail } from '../services/emailService.js';
 
-// Generate JWT Token
-const generateToken = (id, email, role) => {
-  return jwt.sign({ id, email, role }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE || '7d',
-  });
-};
-
-// Register Student
-export const registerStudent = async (req, res) => {
+/**
+ * Register user based on role
+ */
+export const registerUser = async (req, res) => {
   try {
-    const { fullName, email, password, registrationNumber, contactNumber } = req.body;
+    const { fullName, email, password, role, registrationNumber, cnicNumber, department, adminRole } = req.body;
 
-    // Check if student already exists
-    const studentExists = await Student.findOne({ email });
-    if (studentExists) {
-      return res.status(400).json({ message: 'Student already exists with this email' });
+    // Validate required fields
+    if (!fullName || !email || !password || !role) {
+      return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    // Create student
-    const student = await Student.create({
-      fullName,
-      email,
-      password,
-      registrationNumber,
-      contactNumber,
-    });
-
-    if (student) {
-      res.status(201).json({
-        _id: student._id,
-        email: student.email,
-        fullName: student.fullName,
-        role: 'student',
-        registrationNumber: student.registrationNumber,
-        token: generateToken(student._id, student.email, 'student'),
-      });
-    } else {
-      res.status(400).json({ message: 'Invalid student data' });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error during student registration' });
-  }
-};
-
-// Register Teacher
-export const registerTeacher = async (req, res) => {
-  try {
-    const { fullName, email, password, cnicNumber, department, phoneNumber } = req.body;
-
-    // Check if teacher already exists
-    const teacherExists = await Teacher.findOne({ email });
-    if (teacherExists) {
-      return res.status(400).json({ message: 'Teacher already exists with this email' });
-    }
-
-    // Create teacher
-    const teacher = await Teacher.create({
-      fullName,
-      email,
-      password,
-      cnicNumber,
-      department,
-      phoneNumber,
-    });
-
-    if (teacher) {
-      res.status(201).json({
-        _id: teacher._id,
-        email: teacher.email,
-        fullName: teacher.fullName,
-        role: 'teacher',
-        department: teacher.department,
-        token: generateToken(teacher._id, teacher.email, 'teacher'),
-      });
-    } else {
-      res.status(400).json({ message: 'Invalid teacher data' });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error during teacher registration' });
-  }
-};
-
-// Register Admin
-export const registerAdmin = async (req, res) => {
-  try {
-    const { fullName, email, password, cnicNumber, phoneNumber, adminRole } = req.body;
-
-    // Check if admin already exists
-    const adminExists = await Administrator.findOne({ email });
-    if (adminExists) {
-      return res.status(400).json({ message: 'Administrator already exists with this email' });
-    }
-
-    // Create admin
-    const admin = await Administrator.create({
-      fullName,
-      email,
-      password,
-      cnicNumber,
-      phoneNumber,
-      adminRole,
-    });
-
-    if (admin) {
-      res.status(201).json({
-        _id: admin._id,
-        email: admin.email,
-        fullName: admin.fullName,
-        role: 'admin',
-        adminRole: admin.adminRole,
-        token: generateToken(admin._id, admin.email, 'admin'),
-      });
-    } else {
-      res.status(400).json({ message: 'Invalid administrator data' });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error during administrator registration' });
-  }
-};
-
-// Login User
-export const loginUser = async (req, res) => {
-  try {
-    const { email, password, role } = req.body;
-
-    let user;
-    let Model;
+    // Check which collection to use based on role
+    let UserCollection;
+    let userData = { fullName, email, password };
 
     switch (role) {
       case 'student':
-        Model = Student;
+        if (!registrationNumber) {
+          return res.status(400).json({ message: 'Registration number is required for students' });
+        }
+        UserCollection = Student;
+        userData.registrationNumber = registrationNumber;
+        userData.role = 'student';
         break;
+
       case 'teacher':
-        Model = Teacher;
+        if (!cnicNumber) {
+          return res.status(400).json({ message: 'CNIC number is required for teachers' });
+        }
+        UserCollection = Teacher;
+        userData.cnicNumber = cnicNumber;
+        userData.department = department || '';
+        userData.role = 'teacher';
         break;
+
       case 'admin':
-        Model = Administrator;
+        UserCollection = Administrator;
+        userData.adminRole = adminRole || 'manager';
+        userData.role = 'admin';
         break;
+
       default:
         return res.status(400).json({ message: 'Invalid role specified' });
     }
 
-    // Find user by email and include password
-    user = await Model.findOne({ email }).select('+password');
-
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+    // Check if email already exists in the respective collection
+    const existingUser = await UserCollection.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(409).json({ message: 'Email already registered' });
     }
 
-    // Check password
-    const isPasswordValid = await user.comparePassword(password);
+    // Create user in appropriate collection
+    const user = await UserCollection.create(userData);
 
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
+    // Remove password from response
+    const userResponse = user.toObject();
+    delete userResponse.password;
 
-    res.json({
-      _id: user._id,
-      email: user.email,
-      fullName: user.fullName,
-      role: user.role,
-      ...(user.registrationNumber && { registrationNumber: user.registrationNumber }),
-      ...(user.department && { department: user.department }),
-      ...(user.adminRole && { adminRole: user.adminRole }),
-      token: generateToken(user._id, user.email, user.role),
+    res.status(201).json({
+      message: 'User registered successfully',
+      user: userResponse,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error during login' });
+    console.error('Registration error:', error);
+    
+    if (error.code === 11000) {
+      return res.status(409).json({ message: 'Email already registered' });
+    }
+
+    res.status(500).json({ 
+      message: 'Failed to register user', 
+      error: error.message 
+    });
   }
 };
 
-// Get current user profile
-export const getProfile = async (req, res) => {
+/**
+ * Login user and return role-based access
+ */
+export const loginUser = async (req, res) => {
   try {
-    let user;
-    
-    switch (req.user.role) {
-      case 'student':
-        user = await Student.findById(req.user.id);
-        break;
-      case 'teacher':
-        user = await Teacher.findById(req.user.id);
-        break;
-      case 'admin':
-        user = await Administrator.findById(req.user.id);
-        break;
+    const { email, password, role } = req.body;
+
+    if (!email || !password || !role) {
+      return res.status(400).json({ message: 'Email, password, and role are required' });
     }
 
-    if (user) {
-      res.json({
-        _id: user._id,
-        email: user.email,
-        fullName: user.fullName,
-        role: req.user.role,
-        ...(user.registrationNumber && { registrationNumber: user.registrationNumber }),
-        ...(user.department && { department: user.department }),
-        ...(user.adminRole && { adminRole: user.adminRole }),
-        ...(user.contactNumber && { contactNumber: user.contactNumber }),
-        ...(user.phoneNumber && { phoneNumber: user.phoneNumber }),
-        ...(user.phoneNumberVerified !== undefined && { phoneNumberVerified: user.phoneNumberVerified }),
-        ...(user.profilePicture && { profilePicture: user.profilePicture }),
-      });
-    } else {
-      res.status(404).json({ message: 'User not found' });
+    // Select appropriate model based on role
+    let UserCollection;
+    switch (role) {
+      case 'student':
+        UserCollection = Student;
+        break;
+      case 'teacher':
+        UserCollection = Teacher;
+        break;
+      case 'admin':
+        UserCollection = Administrator;
+        break;
+      default:
+        return res.status(400).json({ message: 'Invalid role' });
     }
+
+    // Find user with password field
+    const user = await UserCollection.findOne({ email: email.toLowerCase() }).select('+password');
+    
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Verify password
+    const isPasswordValid = await user.comparePassword(password);
+    
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Prepare user data without sensitive information
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    res.json({
+      message: 'Login successful',
+      user: userResponse,
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Login error:', error);
+    res.status(500).json({ 
+      message: 'Failed to login', 
+      error: error.message 
+    });
+  }
+};
+
+/**
+ * Update order status and trigger email notification
+ */
+export const updateOrderStatus = async (req, res) => {
+  try {
+    const Order = (await import('../models/Order.js')).default;
+    const MenuItem = (await import('../models/MenuItem.js')).default;
+    
+    const { orderId } = req.params;
+    const { status } = req.body;
+
+    // Find and update order
+    const order = await Order.findById(orderId).populate('items.menuItem');
+    
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Update status
+    order.status = status;
+    await order.save();
+
+    // Get user email based on role
+    let userEmail;
+    let userName;
+    
+    if (order.userModel === 'Student') {
+      const student = await Student.findById(order.userId);
+      userEmail = student?.email;
+      userName = student?.fullName;
+    } else if (order.userModel === 'Teacher') {
+      const teacher = await Teacher.findById(order.userId);
+      userEmail = teacher?.email;
+      userName = teacher?.fullName;
+    } else if (order.userModel === 'Administrator') {
+      const admin = await Administrator.findById(order.userId);
+      userEmail = admin?.email;
+      userName = admin?.fullName;
+    }
+
+    if (!userEmail) {
+      console.warn('Could not find user email for order:', orderId);
+      return res.json({ message: 'Order status updated', order });
+    }
+
+    // Send email based on status
+    const orderDetails = {
+      orderId: order._id,
+      createdAt: order.createdAt,
+      totalAmount: order.totalAmount,
+      items: order.items.map(item => ({
+        name: item.menuItem?.name || 'Unknown Item',
+        quantity: item.quantity,
+        price: item.price,
+      })),
+    };
+
+    if (status === 'pending_payment') {
+      // Send pending payment email
+      await sendPendingPaymentEmail(userEmail, orderDetails);
+    } else {
+      // Send status update email
+      await sendOrderStatusUpdateEmail(userEmail, orderDetails, status);
+    }
+
+    res.json({
+      message: 'Order status updated successfully',
+      order,
+      emailSent: true,
+    });
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    res.status(500).json({ 
+      message: 'Failed to update order status', 
+      error: error.message 
+    });
+  }
+};
+
+/**
+ * Get user by email across all collections
+ */
+export const getUserByEmail = async (req, res) => {
+  try {
+    const { email } = req.params;
+    const normalizedEmail = email.toLowerCase();
+
+    // Search in all collections
+    const [student, teacher, administrator] = await Promise.all([
+      Student.findOne({ email: normalizedEmail }),
+      Teacher.findOne({ email: normalizedEmail }),
+      Administrator.findOne({ email: normalizedEmail }),
+    ]);
+
+    const user = student || teacher || administrator;
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    res.json({ user: userResponse });
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ 
+      message: 'Failed to fetch user', 
+      error: error.message 
+    });
   }
 };
