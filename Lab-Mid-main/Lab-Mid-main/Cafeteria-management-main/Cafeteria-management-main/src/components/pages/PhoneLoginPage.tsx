@@ -5,21 +5,24 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Phone, 
   ShieldCheck, 
-  User, 
-  GraduationCap, 
-  KeyRound, 
+  MessageSquare, 
+  PhoneCall, 
   ArrowRight, 
   RefreshCcw, 
   Loader2, 
   AlertCircle, 
   CircleCheck 
 } from 'lucide-react';
+import { usePhoneAuth } from '@/hooks/use-phone-auth';
+import { validatePakistaniPhone, formatPhoneNumber } from '@/lib/phoneValidator';
 
 const PhoneLoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // 1: Role & Phone, 2: OTP
-  const [role, setRole] = useState<'Student' | 'Teacher' | 'Admin'>('Student');
+  const { sendOtp, verifyOtp, loading: isPhoneLoading } = usePhoneAuth();
+  
+  const [step, setStep] = useState(1); // 1: Phone & Method, 2: OTP
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [otpMethod, setOtpMethod] = useState<'sms' | 'call'>('sms');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -42,8 +45,9 @@ const PhoneLoginPage: React.FC = () => {
   // Handle Phone Number Submit
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phoneNumber.length < 10) {
-      setError('Please enter a valid phone number (e.g. 92XXXXXXXXXX).');
+    
+    if (!validatePakistaniPhone(phoneNumber)) {
+      setError('Please enter a valid phone number (e.g. +923XXXXXXXXXX).');
       return;
     }
 
@@ -51,17 +55,31 @@ const PhoneLoginPage: React.FC = () => {
     setError('');
     
     try {
-      const response = await axios.post('http://localhost:5000/api/whatsapp/send-otp', {
-        phoneNumber: phoneNumber,
-        role: role
-      });
+      if (otpMethod === 'sms') {
+        // Use Firebase for SMS OTP
+        const success = await sendOtp(formatPhoneNumber(phoneNumber), 'recaptcha-container');
+        if (success) {
+          setStep(2);
+          setTimer(30);
+        } else {
+          setError('Failed to send SMS. Please try Call option or check your connection.');
+        }
+      } else {
+        // Use Twilio for Call OTP
+        const formattedNumber = formatPhoneNumber(phoneNumber);
+        const response = await axios.post('http://localhost:5000/api/phone-auth/send-call-otp', {
+          phoneNumber: formattedNumber
+        });
 
-      if (response.data.success) {
-        setStep(2);
-        setTimer(30);
+        if (response.data.success) {
+          setStep(2);
+          setTimer(30);
+        }
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to send OTP. Check console for details.');
+      console.error('Send OTP Error:', err);
+      const errorMessage = err.response?.data?.message || 'Failed to send OTP. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -97,30 +115,71 @@ const PhoneLoginPage: React.FC = () => {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/whatsapp/verify-otp', {
-        phoneNumber: phoneNumber,
-        otp: otpCode
-      });
+      if (otpMethod === 'sms') {
+        // Firebase verification
+        const fbUser = await verifyOtp(otpCode);
+        if (fbUser) {
+          setSuccess('Verification Successful! Redirecting...');
+          setTimeout(() => {
+            navigate('/dashboard');
+          }, 1500);
+        } else {
+          setError('Invalid or expired OTP.');
+        }
+      } else {
+        // Twilio call verification
+        const formattedNumber = formatPhoneNumber(phoneNumber);
+        const response = await axios.post('http://localhost:5000/api/phone-auth/verify-otp', {
+          phoneNumber: formattedNumber,
+          otp: otpCode
+        });
 
-      if (response.data.success) {
-        setSuccess('Login Successful! Redirecting...');
-        // Save user info/token here if needed
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 1500);
+        if (response.data.success) {
+          setSuccess('Verification Successful! Redirecting...');
+          setTimeout(() => {
+            navigate('/dashboard');
+          }, 1500);
+        }
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Invalid or expired OTP.');
+      console.error('Verification Error:', err);
+      const errorMessage = err.response?.data?.message || 'Invalid or expired OTP.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  const roles = [
-    { id: 'Student', icon: <GraduationCap className="w-5 h-5" />, color: 'blue' },
-    { id: 'Teacher', icon: <User className="w-5 h-5" />, color: 'emerald' },
-    { id: 'Admin', icon: <KeyRound className="w-5 h-5" />, color: 'amber' }
-  ];
+  const handleResendOTP = async () => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      const formattedNumber = formatPhoneNumber(phoneNumber);
+      
+      if (otpMethod === 'sms') {
+        // For SMS, just trigger Firebase again
+        const success = await sendOtp(formattedNumber, 'recaptcha-container');
+        if (success) {
+          setTimer(30);
+        }
+      } else {
+        // For Call, use backend resend endpoint
+        const response = await axios.post('http://localhost:5000/api/phone-auth/resend-otp', {
+          phoneNumber: formattedNumber,
+          method: 'call'
+        });
+
+        if (response.data.success) {
+          setTimer(30);
+        }
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to resend OTP.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#050505] text-slate-100 p-6 selection:bg-blue-500/30">
@@ -152,29 +211,11 @@ const PhoneLoginPage: React.FC = () => {
                     <div className="absolute inset-0 bg-blue-400 blur-2xl opacity-20" />
                     <Phone className="w-10 h-10 relative z-10" />
                   </div>
-                  <h1 className="text-4xl font-extrabold tracking-tight">Access Portal</h1>
-                  <p className="text-slate-400 font-medium">Verify your identity via WhatsApp OTP</p>
+                  <h1 className="text-4xl font-extrabold tracking-tight">Phone Verification</h1>
+                  <p className="text-slate-400 font-medium">Choose how you want to receive OTP</p>
                 </header>
 
                 <div className="space-y-6">
-                  {/* Role Selector */}
-                  <div className="grid grid-cols-3 gap-3 p-1.5 bg-white/5 rounded-2xl border border-white/5">
-                    {roles.map((r) => (
-                      <button
-                        key={r.id}
-                        onClick={() => setRole(r.id as any)}
-                        className={`flex flex-col items-center gap-2 py-4 rounded-xl transition-all duration-300 ${
-                          role === r.id 
-                            ? `bg-${r.color}-500/20 text-${r.color}-400 border border-${r.color}-500/30 scale-[1.02] shadow-lg` 
-                            : 'hover:bg-white/5 text-slate-500 border border-transparent'
-                        }`}
-                      >
-                        {r.icon}
-                        <span className="text-xs font-bold uppercase tracking-widest">{r.id}</span>
-                      </button>
-                    ))}
-                  </div>
-
                   {/* Phone Input */}
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Phone Number</label>
@@ -190,8 +231,39 @@ const PhoneLoginPage: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* OTP Method Selection */}
+                  <div className="space-y-3">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Receive OTP Via</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setOtpMethod('sms')}
+                        className={`flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all duration-300 ${
+                          otpMethod === 'sms'
+                            ? 'bg-blue-500/20 border-blue-500/50 text-blue-400 shadow-lg shadow-blue-500/20'
+                            : 'bg-slate-900/30 border-white/5 text-slate-400 hover:border-white/10'
+                        }`}
+                      >
+                        <MessageSquare className="w-8 h-8" />
+                        <span className="text-sm font-bold uppercase tracking-wider">SMS</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setOtpMethod('call')}
+                        className={`flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all duration-300 ${
+                          otpMethod === 'call'
+                            ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400 shadow-lg shadow-emerald-500/20'
+                            : 'bg-slate-900/30 border-white/5 text-slate-400 hover:border-white/10'
+                        }`}
+                      >
+                        <PhoneCall className="w-8 h-8" />
+                        <span className="text-sm font-bold uppercase tracking-wider">Voice Call</span>
+                      </button>
+                    </div>
+                  </div>
+
                   {error && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-start gap-3 text-rose-400 text-sm bg-rose-400/10 p-4 rounded-2xl border border-rose-400/20">
+                    <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="flex items-start gap-3 text-rose-400 text-sm bg-rose-400/10 p-4 rounded-2xl border border-rose-400/20">
                       <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
                       <span className="font-medium leading-relaxed">{error}</span>
                     </motion.div>
@@ -206,11 +278,13 @@ const PhoneLoginPage: React.FC = () => {
                       <Loader2 className="w-6 h-6 animate-spin" />
                     ) : (
                       <>
-                        <span className="tracking-wide">SEND VERIFICATION CODE</span>
+                        <span className="tracking-wide">SEND OTP VIA {otpMethod.toUpperCase()}</span>
                         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                       </>
                     )}
                   </button>
+                  
+                  <div id="recaptcha-container" className="flex justify-center"></div>
                 </div>
               </motion.div>
             ) : (
@@ -226,9 +300,11 @@ const PhoneLoginPage: React.FC = () => {
                     <div className="absolute inset-0 bg-emerald-400 blur-2xl opacity-20" />
                     <ShieldCheck className="w-10 h-10 relative z-10" />
                   </div>
-                  <h1 className="text-4xl font-extrabold tracking-tight">Security Check</h1>
-                  <p className="text-slate-400 font-medium">OTP sent to <span className="text-slate-100 font-bold">+{phoneNumber}</span></p>
-                  <button onClick={() => setStep(1)} className="text-blue-400 text-xs font-bold hover:underline underline-offset-4">Wrong number?</button>
+                  <h1 className="text-4xl font-extrabold tracking-tight">Enter OTP</h1>
+                  <p className="text-slate-400 font-medium">
+                    {otpMethod === 'sms' ? 'SMS' : 'Call'} sent to <span className="text-slate-100 font-bold">+{phoneNumber}</span>
+                  </p>
+                  <button onClick={() => setStep(1)} className="text-blue-400 text-xs font-bold hover:underline underline-offset-4">Change Number</button>
                 </header>
 
                 <div className="space-y-8">
@@ -269,18 +345,19 @@ const PhoneLoginPage: React.FC = () => {
                         disabled={loading || !!success}
                         className="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] disabled:opacity-50 text-white font-bold h-16 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-xl shadow-emerald-900/20"
                       >
-                        {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "VERIFY CODE"}
+                        {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "VERIFY NOW"}
                       </button>
 
                       <div className="text-center">
                         {timer > 0 ? (
-                          <p className="text-slate-500 text-sm font-medium">Resend code in <span className="text-slate-300 font-mono tracking-tighter">{timer}s</span></p>
+                          <p className="text-slate-500 text-sm font-medium">Resend available in <span className="text-slate-300 font-mono tracking-tighter">{timer}s</span></p>
                         ) : (
                           <button 
-                            onClick={handleSendOTP}
-                            className="text-sm font-bold text-blue-400 hover:text-blue-300 flex items-center gap-2 mx-auto focus:outline-none"
+                            onClick={handleResendOTP}
+                            disabled={loading}
+                            className="text-sm font-bold text-blue-400 hover:text-blue-300 flex items-center gap-2 mx-auto focus:outline-none disabled:opacity-50"
                           >
-                            <RefreshCcw className="w-4 h-4" /> RESEND CODE
+                            <RefreshCcw className="w-4 h-4" /> RESEND OTP
                           </button>
                         )}
                       </div>
@@ -293,7 +370,7 @@ const PhoneLoginPage: React.FC = () => {
 
           <footer className="mt-12 flex items-center justify-center gap-2 border-t border-white/5 pt-8">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]" />
-            <span className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-500">Secure Meta Infrastructure</span>
+            <span className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-500">Secure Authentication</span>
           </footer>
         </div>
       </motion.div>

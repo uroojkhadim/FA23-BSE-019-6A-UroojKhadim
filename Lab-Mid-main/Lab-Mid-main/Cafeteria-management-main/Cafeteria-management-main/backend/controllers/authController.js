@@ -13,7 +13,7 @@ const generateToken = (id, email, role) => {
 // Register Student
 export const registerStudent = async (req, res) => {
   try {
-    const { fullName, email, password, registrationNumber, contactNumber, whatsappNumber } = req.body;
+    const { fullName, email, password, registrationNumber, contactNumber } = req.body;
 
     // Check if student already exists
     const studentExists = await Student.findOne({ email });
@@ -28,7 +28,6 @@ export const registerStudent = async (req, res) => {
       password,
       registrationNumber,
       contactNumber,
-      whatsappNumber,
     });
 
     if (student) {
@@ -52,7 +51,7 @@ export const registerStudent = async (req, res) => {
 // Register Teacher
 export const registerTeacher = async (req, res) => {
   try {
-    const { fullName, email, password, cnicNumber, department, phoneNumber, whatsappNumber } = req.body;
+    const { fullName, email, password, cnicNumber, department, phoneNumber } = req.body;
 
     // Check if teacher already exists
     const teacherExists = await Teacher.findOne({ email });
@@ -68,7 +67,6 @@ export const registerTeacher = async (req, res) => {
       cnicNumber,
       department,
       phoneNumber,
-      whatsappNumber,
     });
 
     if (teacher) {
@@ -208,8 +206,7 @@ export const getProfile = async (req, res) => {
         ...(user.adminRole && { adminRole: user.adminRole }),
         ...(user.contactNumber && { contactNumber: user.contactNumber }),
         ...(user.phoneNumber && { phoneNumber: user.phoneNumber }),
-        ...(user.whatsappNumber && { whatsappNumber: user.whatsappNumber }),
-        ...(user.whatsappVerified !== undefined && { whatsappVerified: user.whatsappVerified }),
+        ...(user.phoneNumberVerified !== undefined && { phoneNumberVerified: user.phoneNumberVerified }),
         ...(user.profilePicture && { profilePicture: user.profilePicture }),
       });
     } else {

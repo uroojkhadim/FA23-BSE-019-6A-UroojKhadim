@@ -1,33 +1,29 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { User, Mail, Phone, AlertCircle, CheckCircle2, MessageCircle } from 'lucide-react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { User, Mail, Lock, AlertCircle, CheckCircle2, Send } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { BaseCrudService } from '@/integrations';
 import { Students, Teachers, Administrators } from '@/entities';
-import axios from 'axios';
+import { registerUser } from '@/lib/emailAuth';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [role, setRole] = useState<'student' | 'teacher' | 'admin'>('student');
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    phoneNumber: '',
-    whatsappNumber: '',
+    password: '',
+    confirmPassword: '',
     registrationNumber: '',
     cnicNumber: '',
     department: '',
     adminRole: '',
   });
-  const [verificationCode, setVerificationCode] = useState('');
-  const [codeSent, setCodeSent] = useState(false);
-  const [phoneVerified, setPhoneVerified] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isSendingCode, setIsSendingCode] = useState(false);
-  const [isVerifyingCode, setIsVerifyingCode] = useState(false);
 
   const isEmailAlreadyRegistered = async (
     collectionId: 'students' | 'teachers' | 'admins',
@@ -54,340 +50,272 @@ export default function RegisterPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    if (name === 'phoneNumber') {
-      setPhoneVerified(false);
-      setCodeSent(false);
-      setVerificationCode('');
-    }
-  };
-
-  const handleSendVerificationCode = async () => {
-    setError('');
-    setSuccess('');
-
-    if (!formData.phoneNumber) {
-      setError('Enter a valid phone number before requesting verification.');
-      return;
-    }
-
-    setIsSendingCode(true);
-    try {
-      // Use backend WhatsApp API
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/whatsapp/send-otp`, {
-        phoneNumber: formData.phoneNumber,
-        role: role.toUpperCase()
-      });
-      
-      if (response.data.success) {
-        setCodeSent(true);
-        setPhoneVerified(false);
-        setSuccess('Verification code sent to your WhatsApp number!');
-      }
-    } catch (sendError: any) {
-      console.error('Send OTP Error:', sendError);
-      const errorMessage = sendError.response?.data?.message || sendError.message || 'Failed to send verification code.';
-      setError(errorMessage);
-      
-      // Fallback: For testing, allow manual bypass
-      if (import.meta.env.DEV) {
-        console.log('DEV MODE: Check backend console for OTP');
-        setCodeSent(true);
-        setSuccess('DEV MODE: Check backend server console for OTP code');
-      }
-    } finally {
-      setIsSendingCode(false);
-    }
-  };
-
-  const handleVerifyPhone = async () => {
-    setError('');
-    setSuccess('');
-
-    if (!codeSent) {
-      setError('Request a verification code first.');
-      return;
-    }
-
-    if (!verificationCode.trim()) {
-      setError('Enter the verification code.');
-      return;
-    }
-
-    setIsVerifyingCode(true);
-    try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/whatsapp/verify-otp`, {
-        phoneNumber: formData.phoneNumber,
-        otp: verificationCode.trim()
-      });
-      
-      if (response.data.success) {
-        setPhoneVerified(true);
-        setSuccess('Phone number verified successfully!');
-      }
-    } catch (verifyError: any) {
-      console.error('Verify Error:', verifyError);
-      const errorMessage = verifyError.response?.data?.message || verifyError.message || 'Failed to verify code.';
-      setError(errorMessage);
-    } finally {
-      setIsVerifyingCode(false);
-    }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+
+    // Validation
+    if (!formData.fullName || !formData.email || !formData.password) {
+      setError('All fields are required');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    // Check if email already exists in database
+    const roleToCollection = {
+      student: 'students',
+      teacher: 'teachers',
+      admin: 'admins',
+    } as const;
+
+    const collectionId = roleToCollection[role];
+    const emailExistsInDB = await isEmailAlreadyRegistered(
+      collectionId,
+      formData.email
+    );
+
+    if (emailExistsInDB) {
+      setError('This email is already registered with another account.');
+      return;
+    }
+
     setLoading(true);
-
     try {
-      // Validation
-      if (!formData.fullName || !formData.email || !formData.phoneNumber || !formData.whatsappNumber) {
-        setError('Please fill in all required fields.');
-        setLoading(false);
-        return;
-      }
+      // Register user with Firebase
+      const result = await registerUser(
+        formData.email,
+        formData.password,
+        formData.fullName
+      );
 
-      if (!phoneVerified) {
-        setError('Please verify your phone number before creating the account.');
-        setLoading(false);
-        return;
-      }
+      if (result && result.user) {
+        // Save user to database based on role
+        const roleToCollection = {
+          student: 'students',
+          teacher: 'teachers',
+          admin: 'admins',
+        } as const;
 
-      if (role === 'student' && !formData.registrationNumber) {
-        setError('Registration number is required for students.');
-        setLoading(false);
-        return;
-      }
-
-      if ((role === 'teacher' || role === 'admin') && !formData.cnicNumber) {
-        setError('CNIC number is required for teachers and admins.');
-        setLoading(false);
-        return;
-      }
-
-      const collectionId = role === 'student' ? 'students' : role === 'teacher' ? 'teachers' : 'admins';
-      const emailTaken = await isEmailAlreadyRegistered(collectionId, formData.email);
-      if (emailTaken) {
-        setError('An account with this email already exists for the selected role.');
-        setLoading(false);
-        return;
-      }
-
-      if (role === 'student') {
-        const studentData: Students = {
-          _id: crypto.randomUUID(),
+        const collectionId = roleToCollection[role];
+        
+        // Prepare user data for database
+        const userData: any = {
+          id: result.user.uid,
+          email: formData.email.toLowerCase(),
           fullName: formData.fullName,
-          email: formData.email,
-          role: 'student',
-          registrationNumber: formData.registrationNumber,
-          contactNumber: formData.phoneNumber,
-          universityName: 'Comsats University',
+          phoneNumber: '', // Optional, can be added later
+          emailVerified: false, // Will be updated when user verifies email
+          createdAt: new Date().toISOString(),
         };
-        await BaseCrudService.create('students', studentData);
-      } else if (role === 'teacher') {
-        const teacherData: Teachers = {
-          _id: crypto.randomUUID(),
-          fullName: formData.fullName,
-          email: formData.email,
-          role: 'teacher',
-          cnicNumber: formData.cnicNumber,
-          department: formData.department || undefined,
-          phoneNumber: formData.phoneNumber,
-        };
-        await BaseCrudService.create('teachers', teacherData);
+
+        // Add role-specific fields
+        if (role === 'student') {
+          userData.registrationNumber = formData.registrationNumber;
+          userData.department = 'CS'; // Default or from form
+        } else if (role === 'teacher') {
+          userData.department = formData.department;
+        } else if (role === 'admin') {
+          userData.adminRole = formData.adminRole;
+        }
+
+        // Save to database using BaseCrudService
+        try {
+          await BaseCrudService.create(collectionId, userData);
+          console.log(`User saved to ${collectionId} collection`);
+        } catch (dbError: any) {
+          console.error('Database error:', dbError);
+          // Don't fail registration if DB save fails
+          // User can still login and profile can be updated later
+        }
+
+        setSuccess('✅ Registration successful! Verification email sent to your inbox.');
+        
+        // Redirect to login after 3 seconds
+        setTimeout(() => {
+          navigate('/login', { 
+            state: { 
+              message: 'Please check your email and verify your account before logging in.',
+              email: formData.email 
+            } 
+          });
+        }, 3000);
       } else {
-        const adminData: Administrators = {
-          _id: crypto.randomUUID(),
-          fullName: formData.fullName,
-          email: formData.email,
-          cnicNumber: formData.cnicNumber,
-          adminRole: formData.adminRole || undefined,
-          phoneNumber: formData.phoneNumber,
-          universityName: 'Comsats University',
-        };
-        await BaseCrudService.create('admins', adminData);
+        setError('Registration failed. Please try again.');
       }
-
-      setSuccess('Registration successful! Redirecting to login...');
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
-    } catch (err) {
-      setError('An error occurred during registration. Please try again.');
-      console.error(err);
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Additional validation based on role
+    if (role === 'student' && !formData.registrationNumber) {
+      setError('Registration number is required for students');
+      return;
+    }
+
+    if (role === 'teacher' && !formData.department) {
+      setError('Department is required for teachers');
+      return;
+    }
+
+    if (role === 'admin' && !formData.adminRole) {
+      setError('Admin role is required');
+      return;
+    }
+
+    // Call the main registration handler
+    await handleRegister(e);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 text-foreground">
+    <div className="min-h-screen bg-gradient-to-br from-primary via-secondary to-accent flex flex-col">
       <Header />
       
-      <div className="flex items-center justify-center min-h-[calc(100vh-80px)] px-4 pt-20 pb-12">
+      <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-2xl">
-          {/* Logo/Title */}
-          <div className="text-center mb-8">
-            <h1 className="font-heading text-4xl uppercase tracking-tight mb-2">
-              COMSATS Cafeteria
-            </h1>
-            <p className="font-paragraph text-secondary-foreground">
-              Create a Campus Account
-            </p>
-          </div>
-
-          {/* Register Card */}
-          <div className="bg-background rounded-lg shadow-lg p-8 border border-secondary">
-            <h2 className="font-heading text-2xl uppercase tracking-wide mb-6 text-center">
-              Register
-            </h2>
+          {/* Glassmorphic Card */}
+          <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl border border-white/20 p-8">
+            <div className="text-center mb-8">
+              <h1 className="font-bold text-3xl mb-2 text-primary-foreground">Create Your Account</h1>
+              <p className="font-paragraph text-sm text-primary-foreground/80">
+                Join our cafeteria management system
+              </p>
+            </div>
 
             {error && (
-              <div className="mb-6 p-4 bg-destructive/10 border border-destructive rounded-lg flex gap-3">
-                <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-                <p className="font-paragraph text-sm text-destructive">{error}</p>
+              <div className="mb-6 p-4 bg-red-500/20 backdrop-blur-sm border border-red-500/50 rounded-lg flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-300 flex-shrink-0 mt-0.5" />
+                <p className="font-paragraph text-sm text-red-100">{error}</p>
               </div>
             )}
 
             {success && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex gap-3">
-                <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                <p className="font-paragraph text-sm text-green-700">{success}</p>
+              <div className="mb-6 p-4 bg-green-500/20 backdrop-blur-sm border border-green-500/50 rounded-lg flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-green-300 flex-shrink-0 mt-0.5" />
+                <p className="font-paragraph text-sm text-green-100">{success}</p>
               </div>
             )}
 
-            <form onSubmit={handleRegister} className="space-y-6">
-              {/* Role Selection */}
-              <div>
-                <label className="font-paragraph text-sm uppercase tracking-wide text-secondary-foreground mb-3 block">
-                  Select Your Role
-                </label>
-                <div className="grid grid-cols-3 gap-3">
-                  {['student', 'teacher', 'admin'].map((r) => (
-                    <button
-                      key={r}
-                      type="button"
-                      onClick={() => setRole(r as 'student' | 'teacher' | 'admin')}
-                      className={`py-3 px-4 rounded-lg font-paragraph text-sm uppercase tracking-wide transition-all ${
-                        role === r
-                          ? 'bg-primary text-primary-foreground border-2 border-primary'
-                          : 'bg-secondary/20 text-foreground border-2 border-secondary hover:border-primary'
-                      }`}
-                    >
-                      {r.charAt(0).toUpperCase() + r.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
+            <form onSubmit={handleSubmit} className="space-y-6">
               {/* Full Name */}
-              <div>
-                <label className="font-paragraph text-sm uppercase tracking-wide text-secondary-foreground mb-2 block">
+              <div className="space-y-3">
+                <label className="font-paragraph text-sm uppercase tracking-wide text-primary-foreground mb-2 block">
                   Full Name *
                 </label>
                 <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary-foreground" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-foreground/70" />
                   <input
                     type="text"
                     name="fullName"
                     value={formData.fullName}
                     onChange={handleInputChange}
-                    placeholder="Your Full Name"
-                    className="w-full pl-12 pr-4 py-3 border border-secondary rounded-lg font-paragraph text-base focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    placeholder="Enter your full name"
+                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg font-paragraph text-base text-primary-foreground placeholder:text-primary-foreground/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                     required
                   />
                 </div>
               </div>
 
               {/* Email */}
-              <div>
-                <label className="font-paragraph text-sm uppercase tracking-wide text-secondary-foreground mb-2 block">
+              <div className="space-y-3">
+                <label className="font-paragraph text-sm uppercase tracking-wide text-primary-foreground mb-2 block">
                   Email Address *
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary-foreground" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-foreground/70" />
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    placeholder="your.email@comsats.edu.pk"
-                    className="w-full pl-12 pr-4 py-3 border border-secondary rounded-lg font-paragraph text-base focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    placeholder="your.email@example.com"
+                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg font-paragraph text-base text-primary-foreground placeholder:text-primary-foreground/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                     required
                   />
                 </div>
               </div>
 
-              {/* Phone Number */}
-              <div>
-                <label className="font-paragraph text-sm uppercase tracking-wide text-secondary-foreground mb-2 block">
-                  Phone Number *
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary-foreground" />
-                  <input
-                    type="tel"
-                    name="phoneNumber"
-                    value={formData.phoneNumber}
-                    onChange={handleInputChange}
-                    placeholder="+92 300 1234567"
-                    className="w-full pl-12 pr-4 py-3 border border-secondary rounded-lg font-paragraph text-base focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                    required
-                  />
-                </div>
-              </div>
-
+              {/* Password */}
               <div className="space-y-3">
-                <label className="font-paragraph text-sm uppercase tracking-wide text-secondary-foreground mb-2 block">
-                  WhatsApp Number *
+                <label className="font-paragraph text-sm uppercase tracking-wide text-primary-foreground mb-2 block">
+                  Password *
                 </label>
                 <div className="relative">
-                  <MessageCircle className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary-foreground" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-foreground/70" />
                   <input
-                    type="tel"
-                    name="whatsappNumber"
-                    value={formData.whatsappNumber}
+                    type="password"
+                    name="password"
+                    value={formData.password}
                     onChange={handleInputChange}
-                    placeholder="+92 300 1234567"
-                    className="w-full pl-12 pr-4 py-3 border border-secondary rounded-lg font-paragraph text-base focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    placeholder="At least 6 characters"
+                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg font-paragraph text-base text-primary-foreground placeholder:text-primary-foreground/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                     required
+                    minLength={6}
                   />
                 </div>
-                <div className="flex flex-col md:flex-row gap-3">
-                  <button
-                    type="button"
-                    onClick={handleSendVerificationCode}
-                    disabled={isSendingCode}
-                    className="px-4 py-3 bg-transparent border border-secondary rounded-lg font-paragraph text-sm uppercase tracking-wide hover:border-primary transition-colors disabled:opacity-50"
-                  >
-                    {isSendingCode ? 'Sending...' : 'Send Verification Code'}
-                  </button>
+              </div>
+
+              {/* Confirm Password */}
+              <div className="space-y-3">
+                <label className="font-paragraph text-sm uppercase tracking-wide text-primary-foreground mb-2 block">
+                  Confirm Password *
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-foreground/70" />
                   <input
-                    type="text"
-                    value={verificationCode}
-                    onChange={(e) => setVerificationCode(e.target.value)}
-                    placeholder="Enter 6-digit code"
-                    className="flex-1 px-4 py-3 border border-secondary rounded-lg font-paragraph text-base focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                    disabled={!codeSent}
+                    type="password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    placeholder="Re-enter your password"
+                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg font-paragraph text-base text-primary-foreground placeholder:text-primary-foreground/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    required
+                    minLength={6}
                   />
-                  <button
-                    type="button"
-                    onClick={handleVerifyPhone}
-                    disabled={isVerifyingCode || !codeSent}
-                    className="px-4 py-3 bg-primary text-primary-foreground rounded-lg font-paragraph text-sm uppercase tracking-wide hover:bg-slate-800 transition-colors disabled:opacity-50"
-                  >
-                    {isVerifyingCode ? 'Verifying...' : 'Verify'}
-                  </button>
                 </div>
-                <p className={`font-paragraph text-xs ${phoneVerified ? 'text-green-700' : 'text-secondary-foreground'}`}>
-                  {phoneVerified ? '✓ Phone verified via WhatsApp' : 'We will send a verification code to your WhatsApp number'}
-                </p>
+              </div>
+
+              {/* Role Selection */}
+              <div className="space-y-3">
+                <label className="font-paragraph text-sm uppercase tracking-wide text-primary-foreground mb-2 block">
+                  Select Role *
+                </label>
+                <select
+                  name="role"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value as 'student' | 'teacher' | 'admin')}
+                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg font-paragraph text-base text-primary-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
+                  required
+                >
+                  <option value="" disabled>Select your role</option>
+                  <option value="student">Student</option>
+                  <option value="teacher">Teacher</option>
+                  <option value="admin">Administrator</option>
+                </select>
               </div>
 
               {/* Role-Specific Fields */}
               {role === 'student' && (
-                <div>
-                  <label className="font-paragraph text-sm uppercase tracking-wide text-secondary-foreground mb-2 block">
+                <div className="space-y-3">
+                  <label className="font-paragraph text-sm uppercase tracking-wide text-primary-foreground mb-2 block">
                     Registration Number *
                   </label>
                   <input
@@ -395,108 +323,74 @@ export default function RegisterPage() {
                     name="registrationNumber"
                     value={formData.registrationNumber}
                     onChange={handleInputChange}
-                    placeholder="e.g., COMSATS-2024-001"
-                    className="w-full px-4 py-3 border border-secondary rounded-lg font-paragraph text-base focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    placeholder="e.g., FA23-BSE-001"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg font-paragraph text-base text-primary-foreground placeholder:text-primary-foreground/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                     required
                   />
                 </div>
               )}
 
               {role === 'teacher' && (
-                <>
-                  <div>
-                    <label className="font-paragraph text-sm uppercase tracking-wide text-secondary-foreground mb-2 block">
-                      CNIC Number *
-                    </label>
-                    <input
-                      type="text"
-                      name="cnicNumber"
-                      value={formData.cnicNumber}
-                      onChange={handleInputChange}
-                      placeholder="e.g., 12345-6789012-3"
-                      className="w-full px-4 py-3 border border-secondary rounded-lg font-paragraph text-base focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="font-paragraph text-sm uppercase tracking-wide text-secondary-foreground mb-2 block">
-                      Department
-                    </label>
-                    <input
-                      type="text"
-                      name="department"
-                      value={formData.department}
-                      onChange={handleInputChange}
-                      placeholder="e.g., Computer Science"
-                      className="w-full px-4 py-3 border border-secondary rounded-lg font-paragraph text-base focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                    />
-                  </div>
-                </>
+                <div className="space-y-3">
+                  <label className="font-paragraph text-sm uppercase tracking-wide text-primary-foreground mb-2 block">
+                    Department *
+                  </label>
+                  <select
+                    name="department"
+                    value={formData.department}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg font-paragraph text-base text-primary-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    required
+                  >
+                    <option value="">Select Department</option>
+                    <option value="CS">Computer Science</option>
+                    <option value="SE">Software Engineering</option>
+                    <option value="IT">Information Technology</option>
+                    <option value="EE">Electrical Engineering</option>
+                  </select>
+                </div>
               )}
 
               {role === 'admin' && (
-                <>
-                  <div>
-                    <label className="font-paragraph text-sm uppercase tracking-wide text-secondary-foreground mb-2 block">
-                      CNIC Number *
-                    </label>
-                    <input
-                      type="text"
-                      name="cnicNumber"
-                      value={formData.cnicNumber}
-                      onChange={handleInputChange}
-                      placeholder="e.g., 12345-6789012-3"
-                      className="w-full px-4 py-3 border border-secondary rounded-lg font-paragraph text-base focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="font-paragraph text-sm uppercase tracking-wide text-secondary-foreground mb-2 block">
-                      Admin Role
-                    </label>
-                    <select
-                      name="adminRole"
-                      value={formData.adminRole}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-secondary rounded-lg font-paragraph text-base focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                    >
-                      <option value="">Select Admin Role</option>
-                      <option value="cafeteria-manager">Cafeteria Manager</option>
-                      <option value="inventory-manager">Inventory Manager</option>
-                      <option value="finance-manager">Finance Manager</option>
-                      <option value="super-admin">Super Admin</option>
-                    </select>
-                  </div>
-                </>
+                <div className="space-y-3">
+                  <label className="font-paragraph text-sm uppercase tracking-wide text-primary-foreground mb-2 block">
+                    Admin Role *
+                  </label>
+                  <select
+                    name="adminRole"
+                    value={formData.adminRole}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg font-paragraph text-base text-primary-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    required
+                  >
+                    <option value="">Select Admin Role</option>
+                    <option value="super_admin">Super Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="staff">Staff</option>
+                  </select>
+                </div>
               )}
 
               {/* Submit Button */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-4 bg-primary text-primary-foreground font-paragraph text-sm uppercase tracking-widest rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="w-full py-4 bg-primary text-primary-foreground rounded-lg font-paragraph text-base uppercase tracking-wide hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
               >
-                {loading ? 'Creating Account...' : 'Create Account'}
+                {loading ? 'Registering...' : 'Register'}
               </button>
+
+              {/* Login Link */}
+              <p className="font-paragraph text-sm text-center text-primary-foreground/70">
+                Already have an account?{' '}
+                <Link to="/login" className="text-primary font-semibold hover:underline">
+                  Login here
+                </Link>
+              </p>
             </form>
-
-            {/* Divider */}
-            <div className="my-6 flex items-center gap-4">
-              <div className="flex-1 h-[1px] bg-secondary" />
-              <span className="font-paragraph text-xs text-secondary-foreground uppercase">Or</span>
-              <div className="flex-1 h-[1px] bg-secondary" />
-            </div>
-
-            {/* Login Link */}
-            <p className="font-paragraph text-sm text-center text-secondary-foreground">
-              Already have an account?{' '}
-              <Link to="/login" className="text-primary hover:text-blue-700 font-semibold transition-colors">
-                Sign in here
-              </Link>
-            </p>
           </div>
         </div>
-      </div>
+      </main>
 
       <Footer />
     </div>

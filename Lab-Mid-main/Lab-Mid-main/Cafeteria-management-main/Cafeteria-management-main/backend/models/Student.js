@@ -31,11 +31,7 @@ const studentSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  whatsappNumber: {
-    type: String,
-    trim: true,
-  },
-  whatsappVerified: {
+  phoneNumberVerified: {
     type: Boolean,
     default: false,
   },
