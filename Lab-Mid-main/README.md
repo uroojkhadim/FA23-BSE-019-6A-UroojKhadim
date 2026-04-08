@@ -82,6 +82,7 @@ The system utilizes a **Glassmorphic** design language, characterized by:
 
 Live Link
  https://cafeteria-management-main.web.app
+ https://cafeteria-management-main.firebaseapp.com
 
 
 
