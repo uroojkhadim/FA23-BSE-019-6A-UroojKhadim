@@ -194,136 +194,205 @@ export default function LibrarianDashboard() {
 
       {/* Report Upload Modal */}
       {reportModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full custom-shadow">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-newsreader text-2xl font-bold text-primary">Upload Verification Report</h3>
-              <button onClick={() => setReportModalOpen(false)} className="text-on-surface-variant hover:text-primary p-2">
-                <span className="material-symbols-outlined">close</span>
-              </button>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-0 max-w-3xl w-full custom-shadow overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-secondary-container to-amber-400 p-8 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-newsreader text-2xl font-bold">Upload Verification Report</h3>
+                  <p className="text-white/90 text-sm mt-1">Complete the plagiarism and AI detection checks</p>
+                </div>
+                <button 
+                  onClick={() => setReportModalOpen(false)} 
+                  className="p-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors"
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
             </div>
             
-            <div className="space-y-6">
-              <div className="bg-surface-container-low p-4 rounded-xl mb-4">
-                <p className="text-sm font-medium text-primary">Document: {selectedSubmission?.title}</p>
-                <p className="text-xs text-on-surface-variant">Student: {selectedSubmission?.uploadedBy?.name}</p>
+            <div className="p-8 space-y-8">
+              {/* Document Info Card */}
+              <div className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/20">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-secondary-container/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span className="material-symbols-outlined text-secondary-container">description</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-primary text-lg truncate">{selectedSubmission?.title}</p>
+                    <div className="flex flex-wrap items-center gap-4 mt-2">
+                      <span className="inline-flex items-center gap-2 text-on-surface-variant text-sm">
+                        <span className="material-symbols-outlined text-base">person</span>
+                        {selectedSubmission?.uploadedBy?.name}
+                      </span>
+                      {selectedSubmission?.uploadedBy?.department && (
+                        <span className="inline-flex items-center gap-2 text-on-surface-variant text-sm">
+                          <span className="material-symbols-outlined text-base">apartment</span>
+                          {selectedSubmission?.uploadedBy?.department}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Plagiarism Report Section */}
-              <div className="p-4 border border-green-200 rounded-xl bg-green-50/30">
-                <h4 className="font-semibold text-green-800 mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-green-600">plagiarism</span> Plagiarism Report
-                </h4>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 pb-2 border-b border-outline-variant/10">
+                  <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                    <span className="material-symbols-outlined text-green-600">plagiarism</span>
+                  </div>
                   <div>
-                    <label className="block text-sm font-semibold text-on-surface mb-2">Similarity Score (%)</label>
+                    <h4 className="font-bold text-green-800">Plagiarism Report</h4>
+                    <p className="text-green-600/70 text-xs">Check document originality</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-1">
+                    <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Similarity Score (%)</label>
                     <input
                       type="number"
                       value={reportData.similarity_score}
                       onChange={(e) => setReportData({ ...reportData, similarity_score: e.target.value })}
                       placeholder="e.g. 15"
-                      className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-white focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400"
+                      className="w-full px-4 py-3.5 rounded-2xl border border-outline-variant bg-white focus:outline-none focus:ring-4 focus:ring-green-200 focus:border-green-400 transition-all text-sm"
                     />
                   </div>
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-on-surface mb-2">Notes (Optional)</label>
-                  <textarea
-                    value={reportData.plagiarism_notes}
-                    onChange={(e) => setReportData({ ...reportData, plagiarism_notes: e.target.value })}
-                    placeholder="Add notes for plagiarism report..."
-                    rows={2}
-                    className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-white focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 resize-none"
-                  />
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Notes (Optional)</label>
+                    <textarea
+                      value={reportData.plagiarism_notes}
+                      onChange={(e) => setReportData({ ...reportData, plagiarism_notes: e.target.value })}
+                      placeholder="Add any relevant notes about the plagiarism check..."
+                      rows={1}
+                      className="w-full px-4 py-3.5 rounded-2xl border border-outline-variant bg-white focus:outline-none focus:ring-4 focus:ring-green-200 focus:border-green-400 transition-all text-sm resize-none"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-on-surface mb-2">Report File</label>
-                  <div className="border-2 border-dashed border-green-300 rounded-xl p-6 text-center cursor-pointer hover:border-green-500 transition-colors bg-white">
-                    <input
-                      type="file"
-                      id="plagiarism-report-file"
-                      accept=".pdf,.doc,.docx,.txt"
-                      onChange={(e) => setPlagiarismFile(e.target.files[0])}
-                      className="hidden"
-                    />
-                    <label htmlFor="plagiarism-report-file" className="cursor-pointer">
-                      <span className="material-symbols-outlined text-4xl text-green-400 mb-2 block">upload_file</span>
-                      {plagiarismFile ? (
-                        <span className="text-sm font-medium text-green-700">{plagiarismFile.name}</span>
-                      ) : (
-                        <span className="text-sm text-on-surface-variant">Click to upload plagiarism report (PDF, DOC, DOCX, TXT)</span>
-                      )}
+                  <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Report File</label>
+                  {plagiarismFile ? (
+                    <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-5 flex items-center gap-4">
+                      <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <span className="material-symbols-outlined text-green-600">picture_as_pdf</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-green-800 truncate">{plagiarismFile.name}</p>
+                        <p className="text-green-600/70 text-xs">{formatBytes(plagiarismFile.size)}</p>
+                      </div>
+                      <button 
+                        onClick={() => setPlagiarismFile(null)}
+                        className="p-2 text-green-600/60 hover:text-green-800 hover:bg-green-100 rounded-lg transition-all"
+                      >
+                        <span className="material-symbols-outlined">close</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="block">
+                      <div className="border-2 border-dashed border-green-300 rounded-2xl p-8 text-center cursor-pointer hover:border-green-500 hover:bg-green-50/30 transition-all bg-white">
+                        <input
+                          type="file"
+                          id="plagiarism-report-file"
+                          accept=".pdf,.doc,.docx,.txt"
+                          onChange={(e) => setPlagiarismFile(e.target.files[0])}
+                          className="hidden"
+                        />
+                        <span className="material-symbols-outlined text-5xl text-green-400 mb-4 block">cloud_upload</span>
+                        <p className="text-sm font-semibold text-green-700 mb-1">Click to upload or drag &amp; drop</p>
+                        <p className="text-xs text-green-600/60">PDF, DOC, DOCX, or TXT (Max 25MB)</p>
+                      </div>
                     </label>
-                  </div>
+                  )}
                 </div>
               </div>
 
               {/* AI Detection Report Section */}
-              <div className="p-4 border border-purple-200 rounded-xl bg-purple-50/30">
-                <h4 className="font-semibold text-purple-800 mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-purple-600">psychology</span> AI Detection Report
-                </h4>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 pb-2 border-b border-outline-variant/10">
+                  <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                    <span className="material-symbols-outlined text-purple-600">psychology</span>
+                  </div>
                   <div>
-                    <label className="block text-sm font-semibold text-on-surface mb-2">AI Percentage (%)</label>
+                    <h4 className="font-bold text-purple-800">AI Detection Report</h4>
+                    <p className="text-purple-600/70 text-xs">Analyze AI-generated content</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-1">
+                    <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">AI Percentage (%)</label>
                     <input
                       type="number"
                       value={reportData.ai_percentage}
                       onChange={(e) => setReportData({ ...reportData, ai_percentage: e.target.value })}
                       placeholder="e.g. 5"
-                      className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-white focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400"
+                      className="w-full px-4 py-3.5 rounded-2xl border border-outline-variant bg-white focus:outline-none focus:ring-4 focus:ring-purple-200 focus:border-purple-400 transition-all text-sm"
                     />
                   </div>
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-on-surface mb-2">Notes (Optional)</label>
-                  <textarea
-                    value={reportData.ai_notes}
-                    onChange={(e) => setReportData({ ...reportData, ai_notes: e.target.value })}
-                    placeholder="Add notes for AI detection report..."
-                    rows={2}
-                    className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-white focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 resize-none"
-                  />
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Notes (Optional)</label>
+                    <textarea
+                      value={reportData.ai_notes}
+                      onChange={(e) => setReportData({ ...reportData, ai_notes: e.target.value })}
+                      placeholder="Add any relevant notes about the AI detection..."
+                      rows={1}
+                      className="w-full px-4 py-3.5 rounded-2xl border border-outline-variant bg-white focus:outline-none focus:ring-4 focus:ring-purple-200 focus:border-purple-400 transition-all text-sm resize-none"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-on-surface mb-2">Report File</label>
-                  <div className="border-2 border-dashed border-purple-300 rounded-xl p-6 text-center cursor-pointer hover:border-purple-500 transition-colors bg-white">
-                    <input
-                      type="file"
-                      id="ai-report-file"
-                      accept=".pdf,.doc,.docx,.txt"
-                      onChange={(e) => setAiFile(e.target.files[0])}
-                      className="hidden"
-                    />
-                    <label htmlFor="ai-report-file" className="cursor-pointer">
-                      <span className="material-symbols-outlined text-4xl text-purple-400 mb-2 block">upload_file</span>
-                      {aiFile ? (
-                        <span className="text-sm font-medium text-purple-700">{aiFile.name}</span>
-                      ) : (
-                        <span className="text-sm text-on-surface-variant">Click to upload AI detection report (PDF, DOC, DOCX, TXT)</span>
-                      )}
+                  <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Report File</label>
+                  {aiFile ? (
+                    <div className="bg-purple-50 border-2 border-purple-200 rounded-2xl p-5 flex items-center gap-4">
+                      <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <span className="material-symbols-outlined text-purple-600">picture_as_pdf</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-purple-800 truncate">{aiFile.name}</p>
+                        <p className="text-purple-600/70 text-xs">{formatBytes(aiFile.size)}</p>
+                      </div>
+                      <button 
+                        onClick={() => setAiFile(null)}
+                        className="p-2 text-purple-600/60 hover:text-purple-800 hover:bg-purple-100 rounded-lg transition-all"
+                      >
+                        <span className="material-symbols-outlined">close</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="block">
+                      <div className="border-2 border-dashed border-purple-300 rounded-2xl p-8 text-center cursor-pointer hover:border-purple-500 hover:bg-purple-50/30 transition-all bg-white">
+                        <input
+                          type="file"
+                          id="ai-report-file"
+                          accept=".pdf,.doc,.docx,.txt"
+                          onChange={(e) => setAiFile(e.target.files[0])}
+                          className="hidden"
+                        />
+                        <span className="material-symbols-outlined text-5xl text-purple-400 mb-4 block">cloud_upload</span>
+                        <p className="text-sm font-semibold text-purple-700 mb-1">Click to upload or drag &amp; drop</p>
+                        <p className="text-xs text-purple-600/60">PDF, DOC, DOCX, or TXT (Max 25MB)</p>
+                      </div>
                     </label>
-                  </div>
+                  )}
                 </div>
               </div>
 
-              <div className="flex gap-4 mt-6">
+              {/* Actions */}
+              <div className="flex gap-4 pt-4 border-t border-outline-variant/10">
                 <button
                   onClick={() => setReportModalOpen(false)}
-                  className="flex-1 px-6 py-3 rounded-xl border border-outline-variant text-on-surface-variant font-semibold hover:bg-surface-container-low transition-colors"
+                  className="flex-1 px-8 py-4 rounded-2xl border-2 border-outline-variant text-on-surface-variant font-bold text-sm hover:bg-surface-container-low hover:border-outline-variant/40 transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleReportUpload}
                   disabled={!plagiarismFile && !aiFile}
-                  className="flex-1 px-6 py-3 rounded-xl bg-secondary-container text-white font-semibold hover:bg-secondary-container/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-8 py-4 rounded-2xl bg-secondary-container text-white font-bold text-sm hover:bg-amber-500 shadow-lg shadow-secondary-container/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                 >
                   Upload Reports
                 </button>

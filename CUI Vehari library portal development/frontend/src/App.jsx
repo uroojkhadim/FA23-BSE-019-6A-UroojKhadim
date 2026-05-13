@@ -12,6 +12,7 @@ import { ToastProvider, ToastContainer } from './components/layout/Toast'
 
 function ProtectedRoute({ children, roles }) {
   const { user, loading } = useAuth()
+  console.log("[ProtectedRoute] user:", user, "loading:", loading, "roles:", roles)
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-cream">
       <div className="flex flex-col items-center gap-3">

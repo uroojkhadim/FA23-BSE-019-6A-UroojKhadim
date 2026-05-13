@@ -104,22 +104,31 @@ exports.getSupervisorPending = async (req, res) => {
 // PUT /api/documents/:id/approve-supervisor
 exports.approveBySupervisor = async (req, res) => {
   try {
+    console.log("Supervisor approve request - documentId:", req.params.id);
+    console.log("Supervisor user:", req.user._id);
+
     const sub = await Submission.findOne({ 
       _id: req.params.id, 
       supervisorId: req.user._id,
       status: 'pending_supervisor'
     });
 
+    console.log("Found submission for approval:", sub);
+
     if (!sub) {
+      console.log("Submission not found or invalid status");
       return res.status(404).json({ error: 'Document not found or not in pending status' });
     }
 
     sub.status = 'pending_librarian';
     sub.approved_at = new Date();
-    await sub.save();
+    const updatedSub = await sub.save();
+
+    console.log("Updated submission after supervisor approval:", updatedSub);
 
     res.status(200).json({ success: true, message: 'Approved by supervisor' });
   } catch (err) {
+    console.error("Supervisor approval error:", err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -152,17 +161,21 @@ exports.rejectBySupervisor = async (req, res) => {
 // GET /api/documents/librarian/pending
 exports.getLibrarianPending = async (req, res) => {
   try {
+    console.log("Librarian fetching pending documents...");
     const subs = await Submission.find({ status: 'pending_librarian' })
       .populate('uploadedBy', 'name reg_number department')
       .populate('supervisorId', 'name')
       .sort('-createdAt')
       .lean();
 
+    console.log("Found pending librarian submissions:", subs);
+
     res.status(200).json({ 
       success: true, 
       documents: subs.map(s => ({ ...s, id: s._id })) 
     });
   } catch (err) {
+    console.error("Librarian pending fetch error:", err);
     res.status(500).json({ error: err.message });
   }
 };

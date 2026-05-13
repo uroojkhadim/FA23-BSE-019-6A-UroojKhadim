@@ -8,29 +8,39 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    console.log("[AuthProvider] Checking for token...")
     const token = localStorage.getItem('cui_token')
+    console.log("[AuthProvider] Token found:", !!token)
     if (token) {
       api.me()
-        .then(data => setUser(data.user))
+        .then(data => {
+          console.log("[AuthProvider] api.me() success, user:", data.user)
+          setUser(data.user)
+        })
         .catch((err) => {
           console.error('Session verification failed:', err.message)
           localStorage.removeItem('cui_token')
         })
         .finally(() => setLoading(false))
     } else {
+      console.log("[AuthProvider] No token, setting loading=false")
       setLoading(false)
     }
   }, [])
 
   const login = async (email, password) => {
     try {
+      console.log("[useAuth.login] Calling api.login with:", email)
       const data = await api.login({ email, password })
+      console.log("[useAuth.login] api.login response:", data)
       
       // If login is successful and we get a token
       if (data.token) {
+        console.log("[useAuth.login] Setting token and user")
         localStorage.setItem('cui_token', data.token)
         setUser(data.user)
       }
+      console.log("[useAuth.login] Returning user:", data.user)
       return data.user
     } catch (err) {
       // Enhanced logging for debugging
