@@ -252,3 +252,6 @@ After starting the backend, the following accounts are automatically seeded:
   notes: String
 }
 ```
+SceenShots
+<img width="1340" height="635" alt="Screenshot 2026-05-14 002017" src="https://github.com/user-attachments/assets/90016e66-0abb-4d38-be5c-9e06ee9e4dde" />
+
