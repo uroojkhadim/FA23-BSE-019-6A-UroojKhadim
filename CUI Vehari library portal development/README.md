@@ -7,38 +7,83 @@ A full-stack academic integrity portal for COMSATS University Islamabad, Vehari 
 | Layer | Technology |
 |-------|-----------|
 | Frontend | React 18 + Vite + TailwindCSS |
-| Backend | Cloudflare Workers |
-| Database | Cloudflare D1 (SQLite) |
-| File Storage | Cloudflare R2 |
+| Backend | Node.js + Express |
+| Database | MongoDB |
+| File Storage | Backblaze B2 |
 | Auth | JWT (role-based) |
 
 ## Roles
 
-- **Student** — Register, upload thesis, download reports
-- **Supervisor** — Approve/reject student files, preview reports
-- **Librarian** — Download files, run plagiarism checks, upload reports
-- **Admin** — Manage users, delete files, manage storage
+- **Student** — Register, upload thesis, track status, download reports
+- **Supervisor** — Approve/reject student submissions, preview documents
+- **Librarian** — Download submissions, upload plagiarism & AI reports
+- **Admin** — Manage users, view statistics, manage files
+
+## Project Working Workflow
+
+1. **Student Registration**: Student creates account → status = pending
+2. **Admin Approval**: Admin approves student → status = approved & is_active = true
+3. **Student Upload**: Student uploads thesis → status = pending_supervisor
+4. **Supervisor Review**: Supervisor approves → status = pending_librarian
+5. **Librarian Review**: Librarian downloads thesis, uploads reports (plagiarism + AI) → status = completed
+6. **Student Access**: Student can view and download reports
 
 ---
 
 ## Project Structure
 
 ```
-cui-plagiarism-portal/
-├── frontend/          # React app (deploy to Cloudflare Pages)
-│   └── src/
-│       ├── components/
-│       │   ├── auth/
-│       │   ├── layout/
-│       │   ├── student/
-│       │   ├── supervisor/
-│       │   ├── librarian/
-│       │   └── admin/
-│       ├── pages/
-│       ├── hooks/
-│       └── lib/
-└── backend/           # Cloudflare Worker (API)
-    └── src/
+cui-vehari-library-portal/
+├── frontend/                # React + Vite application
+│   ├── src/
+│   │   ├── components/
+│   │   │   └── layout/      # Shared layout components, toast notifications
+│   │   ├── pages/           # Dashboard pages for all roles
+│   │   │   ├── LandingPage.jsx
+│   │   │   ├── LoginPage.jsx
+│   │   │   ├── RegisterPage.jsx
+│   │   │   ├── StudentDashboard.jsx
+│   │   │   ├── SupervisorDashboard.jsx
+│   │   │   ├── LibrarianDashboard.jsx
+│   │   │   └── AdminDashboard.jsx
+│   │   ├── hooks/
+│   │   │   └── useAuth.jsx  # Auth state management
+│   │   ├── lib/
+│   │   │   └── api.js       # API client
+│   │   ├── App.jsx
+│   │   ├── main.jsx
+│   │   └── index.css
+│   ├── index.html
+│   ├── tailwind.config.js
+│   ├── vite.config.js
+│   ├── package.json
+│   └── .env                 # VITE_API_URL=http://localhost:3001
+├── backend/                 # Node.js + Express API
+│   ├── src/
+│   │   ├── config/
+│   │   │   ├── db.js        # MongoDB connection
+│   │   │   └── s3.js        # Backblaze B2 S3 client
+│   │   ├── controllers/
+│   │   │   ├── authController.js
+│   │   │   ├── adminController.js
+│   │   │   └── submissionController.js
+│   │   ├── models/
+│   │   │   ├── User.js
+│   │   │   ├── Submission.js
+│   │   │   └── Report.js
+│   │   ├── middleware/
+│   │   │   └── auth.js      # JWT protection
+│   │   ├── routes/
+│   │   │   ├── authRoutes.js
+│   │   │   ├── adminRoutes.js
+│   │   │   ├── submissionRoutes.js
+│   │   │   └── reportRoutes.js
+│   │   └── server.js        # Express server entry
+│   ├── db/
+│   │   └── index.js
+│   ├── package.json
+│   └── .env                 # PORT, MONGO_URI, JWT_SECRET, B2_*
+└── README.md
 ```
 
 ---
@@ -47,102 +92,73 @@ cui-plagiarism-portal/
 
 ### Prerequisites
 - Node.js 18+
-- Cloudflare account
-- Wrangler CLI: `npm install -g wrangler`
+- MongoDB (local or MongoDB Atlas)
+- Backblaze B2 account (for file storage)
 
----
-
-### Step 1 — Cloudflare D1 Database
-
-```bash
-# Login to Cloudflare
-wrangler login
-
-# Create D1 database
-wrangler d1 create cui-plagiarism-db
-
-# Copy the database_id from output and paste into backend/wrangler.toml
-```
-
-Run migrations:
-```bash
-cd backend
-wrangler d1 execute cui-plagiarism-db --file=./schema.sql
-```
-
----
-
-### Step 2 — Cloudflare R2 Bucket
-
-```bash
-# Create R2 bucket
-wrangler r2 bucket create cui-plagiarism-files
-```
-
----
-
-### Step 3 — Deploy Backend (Cloudflare Worker)
+### Step 1 — Backend Setup
 
 ```bash
 cd backend
 npm install
-wrangler deploy
+
+# Create .env file (copy from env.example)
+cp ../env.example .env
+# Edit .env and fill in your values
 ```
 
-Note the Worker URL (e.g., `https://cui-backend.your-account.workers.dev`)
+Required backend .env variables:
+```
+PORT=3001
+MONGO_URI=mongodb://localhost:27017/cui-portal-dev
+JWT_SECRET=cui_portal_secure_key_2026
+
+# Admin Seed
+SEED_ADMIN_EMAIL=admin@cui.edu.pk
+SEED_ADMIN_PASSWORD=Admin@123
+SEED_ADMIN_NAME=Portal Admin
+
+# Backblaze B2
+B2_KEY_ID=your_b2_key_id
+B2_APPLICATION_KEY=your_b2_application_key
+B2_BUCKET_NAME=your_bucket_name
+B2_ENDPOINT=https://s3.us-east-005.backblazeb2.com
+```
+
+Start the backend server:
+```bash
+node src/server.js
+```
 
 ---
 
-### Step 4 — Frontend Setup
+### Step 2 — Frontend Setup
 
 ```bash
 cd frontend
 npm install
 
-# Copy env file
-cp .env.example .env
-# Edit .env and set VITE_API_URL to your Worker URL
+# Create .env file
+echo "VITE_API_URL=http://localhost:3001" > .env
 ```
 
-Run locally:
+Start the frontend dev server:
 ```bash
 npm run dev
 ```
 
-Deploy to Cloudflare Pages:
-```bash
-npm run build
-wrangler pages deploy dist --project-name cui-plagiarism-portal
-```
+The frontend will be available at http://localhost:5173 (or another port if 5173 is in use)
 
 ---
 
-### Step 5 — Create First Admin
+## Default Credentials
 
-After deploying, run this in D1 console or via wrangler:
+After starting the backend, the following accounts are automatically seeded:
 
-```sql
-INSERT INTO users (name, email, password_hash, role, department, reg_number, phone)
-VALUES ('Admin', 'admin@cui.edu.pk', '$2b$10$REPLACE_WITH_HASHED_PASSWORD', 'admin', 'Administration', 'ADMIN-001', '03001234567');
-```
-
-Or use the `/api/admin/seed` endpoint (only works once, disabled after first admin is created).
-
----
-
-## Environment Variables
-
-### Backend (wrangler.toml)
-```toml
-[vars]
-JWT_SECRET = "your-super-secret-jwt-key-change-this"
-FRONTEND_URL = "https://cui-plagiarism-portal.pages.dev"
-```
-
-### Frontend (.env)
-```
-VITE_API_URL=https://cui-backend.your-account.workers.dev
-```
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@cui.edu.pk | Admin@123 |
+| Supervisor | supervisor@cui.edu.pk | Supervisor@123 |
+| Librarian | librarian@cui.edu.pk | Librarian@123 |
 
 ---
 
@@ -151,37 +167,88 @@ VITE_API_URL=https://cui-backend.your-account.workers.dev
 ### Auth
 - `POST /api/auth/register` — Student self-registration
 - `POST /api/auth/login` — All roles login
-- `GET  /api/auth/me` — Get current user
+- `GET  /api/auth/me` — Get current user (protected)
+- `GET  /api/auth/supervisors` — Get list of active supervisors
 
 ### Student
-- `POST /api/submissions/upload` — Upload file (returns presigned R2 URL)
-- `GET  /api/submissions/my` — My submissions
-- `GET  /api/submissions/:id/reports` — Download reports
+- `POST /api/documents/upload` — Upload thesis (protected, student only)
+- `GET  /api/documents/my` — Get my submissions (protected, student only)
+- `GET  /api/documents/:id/download` — Download submission (protected)
+- `GET  /api/documents/:id/reports` — Get reports for submission (protected)
+- `GET  /api/reports/:id/download` — Download report file (protected)
 
 ### Supervisor
-- `GET  /api/submissions/pending` — Pending approvals
-- `POST /api/submissions/:id/approve` — Approve submission
-- `POST /api/submissions/:id/reject` — Reject with reason
+- `GET  /api/documents/supervisor/pending` — Get pending submissions (protected, supervisor only)
+- `PUT  /api/documents/:id/approve-supervisor` — Approve submission (protected, supervisor only)
+- `PUT  /api/documents/:id/reject-supervisor` — Reject submission (protected, supervisor only)
 
 ### Librarian
-- `GET  /api/submissions/approved` — Approved files ready for checking
-- `POST /api/submissions/:id/reports` — Upload AI + plagiarism reports
-- `GET  /api/submissions/:id/download` — Get R2 download URL
+- `GET  /api/documents/librarian/pending` — Get pending librarian submissions (protected, librarian only)
+- `POST /api/documents/:id/upload-reports` — Upload plagiarism & AI reports (protected, librarian only)
+- `PUT  /api/documents/:id/approve-final` — Final approval (protected, librarian only)
+- `PUT  /api/documents/:id/reject-final` — Final rejection (protected, librarian only)
 
 ### Admin
-- `GET  /api/admin/users` — All users
-- `POST /api/admin/users` — Add supervisor/librarian
-- `DELETE /api/admin/users/:id` — Remove user
-- `GET  /api/admin/files` — All files with sizes
-- `DELETE /api/admin/files/:id` — Delete file from R2
+- `GET  /api/admin/users` — Get users (protected, admin/subadmin only)
+- `POST /api/admin/users` — Add supervisor/librarian/admin (protected, admin/subadmin only)
+- `POST /api/admin/users/:id/status` — Update user status (protected, admin/subadmin only)
+- `DELETE /api/admin/users/:id` — Deactivate user (protected, admin/subadmin only)
+- `GET  /api/admin/stats` — Get dashboard stats (protected, admin/subadmin only)
+- `GET  /api/documents/all` — Get all submissions (protected, admin/subadmin only)
+- `DELETE /api/documents/:id` — Delete submission (protected, admin/subadmin only)
 
 ---
 
-## Database Schema
+## Database Models
 
-See `backend/schema.sql` for full schema.
+### User
+```javascript
+{
+  name: String,
+  email: String,
+  password_hash: String,
+  role: ['student', 'supervisor', 'librarian', 'admin', 'subadmin'],
+  department: String,
+  reg_number: String,
+  phone: String,
+  supervisor_id: ObjectId (ref: User),
+  is_active: Boolean,
+  status: ['pending', 'approved', 'rejected']
+}
+```
 
-Tables:
-- `users` — all roles
-- `submissions` — thesis files with status
-- `reports` — AI and plagiarism reports per submission
+### Submission
+```javascript
+{
+  title: String,
+  fileUrl: String,
+  file_key: String,
+  file_name: String,
+  file_size: Number,
+  uploadedBy: ObjectId (ref: User),
+  supervisorId: ObjectId (ref: User),
+  librarianId: ObjectId (ref: User),
+  status: ['pending', 'pending_supervisor', 'pending_librarian', 'rejected', 'completed'],
+  reject_reason: String,
+  approved_at: Date,
+  final_decision_at: Date,
+  doc_report_url: String,
+  doc_report_key: String,
+  ai_report_url: String,
+  ai_report_key: String
+}
+```
+
+### Report
+```javascript
+{
+  submission_id: ObjectId (ref: Submission),
+  librarian_id: ObjectId (ref: User),
+  report_type: ['plagiarism', 'ai'],
+  file_key: String,
+  file_name: String,
+  similarity_score: Number,
+  ai_percentage: Number,
+  notes: String
+}
+```
