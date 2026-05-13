@@ -1,242 +1,204 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Utensils } from 'lucide-react';
+import { ShoppingCart, Utensils, AlertCircle, Search, Plus } from 'lucide-react';
 import { BaseCrudService } from '@/integrations';
 import { MenuItems } from '@/entities';
 import { useCart, useCurrency, formatPrice, DEFAULT_CURRENCY } from '@/integrations';
 import { Image } from '@/components/ui/image';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import { useAuthStore } from '@/store/authStore';
-import { AlertCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { RealtimeService } from '@/lib/RealtimeService';
 
 export default function MenuPage() {
   const [items, setItems] = useState<MenuItems[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const { addingItemId, actions } = useCart();
   const { currency } = useCurrency();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
+
 
   useEffect(() => {
-    loadMenuItems();
+    setIsLoading(true);
+    const unsub = RealtimeService.subscribeToCollection('menuitems', (data) => {
+      setItems(data.filter(item => item.isAvailable));
+      setIsLoading(false);
+    });
+
+    return () => unsub();
   }, []);
 
   const loadMenuItems = async () => {
-    setIsLoading(true);
-    try {
-      const result = await BaseCrudService.getAll<MenuItems>('menuitems');
-      setItems(result.items.filter(item => item.isAvailable));
-    } catch (error) {
-      console.error('Failed to load menu items:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    // This is now handled by the real-time listener
   };
 
   const categories = ['all', ...Array.from(new Set(items.map(item => item.category).filter(Boolean)))];
 
-  const filteredItems = selectedCategory === 'all' 
-    ? items 
-    : items.filter(item => item.category === selectedCategory);
+  const filteredItems = items.filter(item => {
+    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+    const matchesSearch = item.itemName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         item.itemDescription?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
-  // Role-based access control
-  if (user && user.role !== 'student') {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="pt-32 pb-24">
-          <section className="w-full max-w-[100rem] mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-4 p-6 bg-amber-50 border border-amber-200 rounded-lg">
-              <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
-              <div>
-                <h2 className="font-heading text-lg text-amber-900 mb-1">Access Restricted</h2>
-                <p className="font-paragraph text-sm text-amber-800">
-                  The menu is only available for students. {user.role === 'teacher' ? 'Teachers cannot access student order details.' : 'Administrators can manage cafeteria operations from the dashboard.'}
-                </p>
-              </div>
-            </div>
-          </section>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+  // Modern food placeholder images
+  const getFoodImage = (item: MenuItems) => {
+    if (item.itemImage && !item.itemImage.includes('YOUR_IMAGE_URL') && !item.itemImage.includes('placeholder')) {
+      return item.itemImage;
+    }
+    // Reliable food category images
+    const category = item.category?.toLowerCase() || '';
+    if (category.includes('burger')) return 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80';
+    if (category.includes('pizza')) return 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80';
+    if (category.includes('drink') || category.includes('beverage')) return 'https://images.unsplash.com/photo-1544145945-f904253d0c7b?auto=format&fit=crop&w=400&q=80';
+    if (category.includes('coffee') || category.includes('tea')) return 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=400&q=80';
+    if (category.includes('sandwich')) return 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=400&q=80';
+    if (category.includes('rice') || category.includes('biryani')) return 'https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=400&q=80';
+    
+    return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80'; // Default healthy bowl
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      <Header />
-      
-      <main className="pt-32 pb-24">
-        {/* Page Header */}
-        <section className="w-full max-w-[100rem] mx-auto px-4 sm:px-6 lg:px-8 mb-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl text-slate-900 uppercase mb-4">
-              Menu
-            </h1>
-            <div className="w-24 h-1.5 bg-gradient-to-r from-blue-600 to-blue-800 rounded-full"></div>
-            <p className="font-paragraph text-sm text-slate-600 mt-4">Discover delicious meals from our cafeteria</p>
-          </motion.div>
-        </section>
-
-        {/* Category Filter */}
-        <section className="w-full max-w-[100rem] mx-auto px-4 sm:px-6 lg:px-8 mb-16">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex flex-wrap gap-3"
-          >
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`font-paragraph text-sm uppercase tracking-wide px-6 py-3 rounded-xl border-2 transition-all font-semibold ${
-                  selectedCategory === category
-                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-blue-600 shadow-lg scale-105'
-                    : 'bg-white text-slate-700 border-slate-200 hover:border-blue-400 hover:bg-blue-50'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </motion.div>
-        </section>
-
-        {/* Menu Items Grid */}
-        <section className="w-full max-w-[100rem] mx-auto px-4 sm:px-6 lg:px-8 min-h-[360px] sm:min-h-[520px]">
-          {isLoading ? (
-            <div className="grid grid-cols-12 gap-8">
-              {[...Array(6)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="col-span-12 md:col-span-6 lg:col-span-4"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.1 }}
-                >
-                  <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">
-                    <div className="h-64 bg-slate-200 animate-pulse" />
-                    <div className="p-6 space-y-4">
-                      <div className="h-6 bg-slate-200 rounded animate-pulse w-3/4" />
-                      <div className="h-4 bg-slate-200 rounded animate-pulse w-1/2" />
-                      <div className="h-4 bg-slate-200 rounded animate-pulse w-full" />
-                      <div className="flex justify-between items-center pt-4">
-                        <div className="h-8 bg-slate-200 rounded animate-pulse w-24" />
-                        <div className="h-10 bg-slate-200 rounded animate-pulse w-32" />
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+    <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h1 className="font-heading text-3xl font-bold text-foreground uppercase tracking-tight">
+            Menu Explorer
+          </h1>
+          <p className="text-secondary-foreground font-paragraph text-sm mt-1">
+            Browse and order your favorite meals from COMSATS Cafeteria.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="flex-1 md:w-80 relative group">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
             </div>
-          ) : filteredItems.length > 0 ? (
-            <div className="grid grid-cols-12 gap-6 lg:gap-8">
-              {filteredItems.map((item, index) => (
-                <motion.div
-                  key={item._id}
-                  className="col-span-12 md:col-span-6 lg:col-span-4"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.05 }}
-                  whileHover={{ y: -8, transition: { duration: 0.2 } }}
-                >
-                  <div className="group bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-card shadow-card-hover hover:shadow-2xl transition-all duration-300 h-full flex flex-col">
-                    <Link to={`/menu/${item._id}`} className="relative overflow-hidden">
-                      <Image
-                        src={item.itemImage}
-                        alt={item.itemName || 'Menu item'}
-                        className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
-                        width={400}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      {item.category && (
-                        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                          <p className="font-paragraph text-xs uppercase tracking-wide text-slate-700 font-semibold">
-                            {item.category}
-                          </p>
-                        </div>
-                      )}
-                    </Link>
-                    <div className="p-6 flex-1 flex flex-col">
-                      <Link to={`/menu/${item._id}`}>
-                        <h3 className="font-heading text-xl text-slate-900 uppercase mb-2 hover:text-blue-600 transition-colors line-clamp-1">
-                          {item.itemName}
-                        </h3>
-                      </Link>
-                      {item.itemDescription && (
-                        <p className="font-paragraph text-sm text-slate-600 mb-4 line-clamp-2 flex-1">
-                          {item.itemDescription}
-                        </p>
-                      )}
-                      {item.dietaryRestrictions && (
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {item.dietaryRestrictions.split(',').map((restriction, idx) => (
-                            <span
-                              key={idx}
-                              className="px-3 py-1 bg-green-50 text-green-700 text-xs uppercase tracking-wide rounded-full font-semibold"
-                            >
-                              {restriction.trim()}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
-                        <span className="font-heading text-2xl text-slate-900 font-bold">
-                          {formatPrice(item.itemPrice || 0, currency ?? DEFAULT_CURRENCY)}
-                        </span>
-                        <button
-                          onClick={() => actions.addToCart({ 
-                            collectionId: 'menuitems', 
-                            itemId: item._id 
-                          })}
-                          disabled={addingItemId === item._id}
-                          className="group/btn bg-gradient-to-r from-blue-600 to-blue-700 text-white font-paragraph font-semibold px-6 py-2.5 rounded-xl transition-all hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 shadow-md hover:shadow-lg transform active:scale-95"
-                        >
-                          {addingItemId === item._id ? (
-                            <span className="flex items-center gap-2">
-                              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                              </svg>
-                              Adding...
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-2">
-                              <ShoppingCart className="w-4 h-4" strokeWidth={1.5} />
-                              Add to Cart
-                            </span>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-24"
+            <input
+              type="text"
+              placeholder="Search delicious food..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-white border-2 border-slate-200 rounded-2xl text-sm font-medium focus:border-primary focus:ring-0 transition-all outline-none"
+            />
+          </div>
+          
+          {(user?.role === 'admin' || user?.role === 'super_admin') && (
+            <Link 
+              to="/add-menu"
+              className="bg-primary text-white p-3 rounded-2xl shadow-lg shadow-primary/20 hover:scale-110 transition-all flex items-center gap-2"
+              title="Add New Menu Item"
             >
-              <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Utensils className="w-12 h-12 text-slate-400" strokeWidth={1.5} />
-              </div>
-              <p className="font-paragraph text-lg text-slate-600 font-medium">
-                No menu items available in this category.
-              </p>
-            </motion.div>
+              <Plus className="w-6 h-6" />
+              <span className="hidden sm:inline font-bold text-xs uppercase tracking-widest">Add Item</span>
+            </Link>
           )}
-        </section>
-      </main>
+        </div>
+      </div>
 
-      <Footer />
+      {/* Category Filter */}
+      <div className="flex flex-wrap gap-2 pb-2 overflow-x-auto cart-scrollbar">
+        {categories.map((category) => (
+          <button
+            key={category}
+            onClick={() => setSelectedCategory(category)}
+            className={`font-paragraph text-[10px] uppercase tracking-widest px-6 py-2.5 rounded-xl border-2 transition-all font-bold whitespace-nowrap ${
+              selectedCategory === category
+                ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
+                : 'bg-white text-slate-500 border-slate-200 hover:border-primary hover:text-primary'
+            }`}
+          >
+            {category}
+          </button>
+        ))}
+      </div>
+
+
+      {/* Menu Items Grid */}
+      <div className="min-h-[400px]">
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm animate-pulse">
+                <div className="h-48 bg-slate-100" />
+                <div className="p-6 space-y-3">
+                  <div className="h-5 bg-slate-100 rounded w-3/4" />
+                  <div className="h-4 bg-slate-100 rounded w-full" />
+                  <div className="pt-4 flex justify-between">
+                    <div className="h-6 bg-slate-100 rounded w-20" />
+                    <div className="h-10 bg-slate-100 rounded w-28" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredItems.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredItems.map((item, index) => (
+              <motion.div
+                key={item._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+                whileHover={{ y: -8 }}
+                className="group bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col"
+              >
+                <Link to={`/menu/${item._id}`} className="relative overflow-hidden aspect-video">
+                  <Image
+                    src={getFoodImage(item)}
+                    alt={item.itemName || 'Menu item'}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    width={400}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  {item.category && (
+                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-lg">
+                      <p className="font-paragraph text-[10px] uppercase tracking-wider text-primary font-bold">
+                        {item.category}
+                      </p>
+                    </div>
+                  )}
+                </Link>
+                <div className="p-5 flex-1 flex flex-col">
+                  <Link to={`/menu/${item._id}`}>
+                    <h3 className="font-heading text-lg font-bold text-slate-900 uppercase mb-1 hover:text-primary transition-colors line-clamp-1">
+                      {item.itemName}
+                    </h3>
+                  </Link>
+                  {item.itemDescription && (
+                    <p className="font-paragraph text-xs text-slate-500 mb-4 line-clamp-2 flex-1">
+                      {item.itemDescription}
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
+                    <span className="font-heading text-xl text-primary font-bold">
+                      {formatPrice(item.itemPrice || 0, currency ?? DEFAULT_CURRENCY)}
+                    </span>
+                    <button
+                      onClick={() => actions.addToCart({ 
+                        collectionId: 'menuitems', 
+                        itemId: item._id 
+                      })}
+                      disabled={addingItemId === item._id}
+                      className="bg-primary text-white font-paragraph font-bold text-xs px-4 py-2.5 rounded-xl transition-all hover:shadow-lg shadow-primary/20 transform active:scale-95 flex items-center gap-2"
+                    >
+                      <ShoppingCart className="w-3.5 h-3.5" />
+                      Add
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
+            <Utensils className="w-16 h-16 text-slate-200 mb-4" />
+            <p className="font-heading text-xl text-slate-400 uppercase tracking-widest">No Items Found</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

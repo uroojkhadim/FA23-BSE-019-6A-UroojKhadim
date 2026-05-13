@@ -92,9 +92,11 @@ export const createOrderWorkflow = async (input: CreateOrderInput) => {
     notes: orderNotes || undefined,
   };
 
-  await BaseCrudService.create('orders', orderPayload);
+  // Start order creation
+  const orderPromise = BaseCrudService.create('orders', orderPayload);
 
-  for (const lineItem of input.lineItems) {
+  // Parallelize line item creation
+  const itemPromises = input.lineItems.map(lineItem => {
     const orderItem: OrderItems = {
       _id: crypto.randomUUID(),
       orderId,
@@ -103,9 +105,8 @@ export const createOrderWorkflow = async (input: CreateOrderInput) => {
       unitPrice: lineItem.unitPrice,
       lineItemTotal: lineItem.unitPrice * lineItem.quantity,
     };
-
-    await BaseCrudService.create('orderitems', orderItem);
-  }
+    return BaseCrudService.create('orderitems', orderItem);
+  });
 
   const paymentPayload: Payments = {
     _id: crypto.randomUUID(),
@@ -117,7 +118,10 @@ export const createOrderWorkflow = async (input: CreateOrderInput) => {
     paymentDateTime: new Date().toISOString(),
   };
 
-  await BaseCrudService.create('payments', paymentPayload);
+  const paymentPromise = BaseCrudService.create('payments', paymentPayload);
+
+  // Wait for all core writes to complete
+  await Promise.all([orderPromise, paymentPromise, ...itemPromises]);
 
   return {
     orderId,

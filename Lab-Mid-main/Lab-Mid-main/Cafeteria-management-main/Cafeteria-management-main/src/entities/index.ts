@@ -74,6 +74,33 @@ export interface MenuItems {
   category?: string;
   /** @wixFieldType text */
   dietaryRestrictions?: string;
+  /** @wixFieldType number */
+  stockQuantity?: number;
+}
+
+
+/**
+ * Collection ID: inventory
+ * Interface for Inventory
+ */
+export interface Inventory {
+  _id: string;
+  _createdDate?: Date;
+  _updatedDate?: Date;
+  /** @wixFieldType text */
+  itemName?: string;
+  /** @wixFieldType text */
+  category?: string;
+  /** @wixFieldType number */
+  quantity?: number;
+  /** @wixFieldType text */
+  unit?: string;
+  /** @wixFieldType number */
+  minStockLevel?: number;
+  /** @wixFieldType text */
+  status?: string;
+  /** @wixFieldType text */
+  lastUpdatedBy?: string;
 }
 
 
@@ -145,6 +172,10 @@ export interface Payments {
   paymentStatus?: string;
   /** @wixFieldType datetime */
   paymentDateTime?: Date | string;
+  /** @wixFieldType image */
+  receiptImage?: string;
+  /** @wixFieldType text */
+  receiptPdfUrl?: string;
 }
 
 

@@ -18,7 +18,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB
-connectDB();
+connectDB().catch(console.error);
 
 // Security middleware
 app.use(helmet()); // Set security HTTP headers
@@ -26,10 +26,11 @@ app.use(helmet()); // Set security HTTP headers
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: process.env.NODE_ENV === 'development' ? 1000 : 100, // Higher limit for dev
   message: 'Too many requests from this IP, please try again later.',
 });
 app.use('/api', limiter);
+
 
 // Body parser middleware
 app.use(express.json());
@@ -98,7 +99,8 @@ app.listen(PORT, () => {
 ║                                                           ║
 ║   Server running on port ${PORT}                            ║
 ║   Environment: ${process.env.NODE_ENV || 'development'}                             ║
-║   API: http://localhost:${PORT}/api                        ║
+║   API: http://127.0.0.1:${PORT}/api                        ║
+
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
   `);

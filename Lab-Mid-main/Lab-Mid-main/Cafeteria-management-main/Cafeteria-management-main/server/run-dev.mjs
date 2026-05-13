@@ -4,13 +4,14 @@ const isWindows = process.platform === "win32";
 const npmCmd = "npm";
 const children = [];
 
-const start = (command, args) => {
+const start = (command, args, options = {}) => {
   const child = spawn(command, args, {
     stdio: "inherit",
     shell: isWindows,
-    cwd: process.cwd(),
+    cwd: options.cwd || process.cwd(),
     env: process.env,
   });
+
 
   children.push(child);
 
@@ -37,3 +38,5 @@ process.on("SIGTERM", () => shutdown(0));
 
 start("node", ["server/verification-server.mjs"]);
 start(npmCmd, ["run", "dev:client", "--", "--host", "127.0.0.1", "--port", "5173"]);
+start(npmCmd, ["run", "dev"], { cwd: "backend" });
+

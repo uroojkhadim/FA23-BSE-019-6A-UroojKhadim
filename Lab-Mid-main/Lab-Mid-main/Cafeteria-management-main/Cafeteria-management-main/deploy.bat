@@ -42,7 +42,7 @@ firebase deploy --only hosting --force
 ## 🎯 What This Does
 
 1. ✅ Builds production bundle (Vite)
-2. ✅ Outputs to `build/` directory
+2. ✅ Outputs to `dist/` directory
 3. ✅ Deploys to Firebase Hosting
 4. ✅ Updates live website
 5. ✅ Invalidates CDN cache
@@ -52,9 +52,9 @@ firebase deploy --only hosting --force
 **Build:**
 ```
 ✓ built in ~20s
-build/index.html
-build/assets/*.js
-build/assets/*.css
+dist/index.html
+dist/assets/*.js
+dist/assets/*.css
 ```
 
 **Deploy:**

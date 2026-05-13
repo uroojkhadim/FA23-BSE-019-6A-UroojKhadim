@@ -26,19 +26,28 @@ export default {
                 paragraph: "open sans"
             },
             colors: {
-                accent: '#1e40af',
+                // COMSATS Primary Sky Blue Theme
+                primary: '#0ea5e9',          // Sky 500
+                'primary-light': '#38bdf8',  // Sky 400
+                'primary-dark': '#0284c7',   // Sky 600
+                
+                accent: '#0ea5e9',           // Using sky blue as accent too
+                'accent-light': '#38bdf8',
+                'accent-dark': '#0284c7',
+                
+                // Supporting colors
                 destructive: '#dc2626',
                 'destructive-foreground': '#FFFFFF',
-                background: '#f8fafc',
-                secondary: '#cbd5e1',
-                foreground: '#1e293b',
-                'secondary-foreground': '#475569',
+                background: '#F8FAFC',       // Slightly off-white for modern SaaS feel
+                secondary: '#E2E8F0',        // Clean slate gray for secondary
+                foreground: '#0F172A',       // Dark slate for text
+                'secondary-foreground': '#64748B',
                 'primary-foreground': '#FFFFFF',
-                primary: '#0f172a',
-                'blue-600': '#2563eb',
-                'blue-700': '#1d4ed8',
-                'slate-700': '#374151',
-                'slate-800': '#1f2937',
+                
+                // SaaS specific palette
+                'sidebar-bg': '#0c4a6e',     // Sky 900 for sidebar
+                'card-bg': '#FFFFFF',
+                'border-color': '#E2E8F0',
             },
         },
     },

@@ -1,12 +1,11 @@
-import { useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useRef, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ShoppingCart, Users, BarChart3, Utensils, ArrowRight, Mail, Phone, MessageCircle } from 'lucide-react';
+import { ShoppingCart, Users, BarChart3, Utensils, ArrowRight } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Image } from '@/components/ui/image';
 import { getFeaturesForRole, roleSummaries } from '@/lib/access';
-import { useAuthStore } from '@/store/authStore';
+import { useAuth } from '@/contexts/AuthContext';
 
 const HERO_IMAGE =
   'https://static.wixstatic.com/media/a525c7_81f4b76f50b04205bc0e0661511f5926~mv2.png?originWidth=1280&originHeight=704';
@@ -14,7 +13,22 @@ const HERO_IMAGE =
 const featureIcons = [Utensils, Users, ShoppingCart, BarChart3];
 
 export default function HomePage() {
-  const { user } = useAuthStore();
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && user) {
+      const roleDashboardMap: Record<string, string> = {
+        super_admin: '/super-admin/dashboard',
+        admin: '/admin/dashboard',
+        staff: '/admin/dashboard',
+        teacher: '/teacher/dashboard',
+        student: '/student/dashboard',
+      };
+      navigate(roleDashboardMap[user.role] || '/dashboard', { replace: true });
+    }
+  }, [user, loading, navigate]);
+
   const { scrollYProgress } = useScroll();
   const heroY = useTransform(scrollYProgress, [0, 0.2], [0, 100]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.2]);
@@ -27,15 +41,26 @@ export default function HomePage() {
   const features = getFeaturesForRole(user?.role);
   const roleCards = Object.values(roleSummaries);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0ea5e9]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+      </div>
+    );
+  }
+
+  // If user is authenticated, this page will redirect in useEffect, but we return null to avoid flicker
+  if (user) return null;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 text-foreground selection:bg-blue-600 selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-sky-50 text-foreground selection:bg-accent selection:text-white overflow-x-hidden">
       <Header />
 
       {/* Hero Section */}
       <section className="relative w-full max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-10 pt-28 sm:pt-36 pb-16 sm:pb-24">
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-100 rounded-full opacity-30 blur-3xl animate-pulse-slow" />
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-sky-100 rounded-full opacity-30 blur-3xl animate-pulse-slow" />
           <div className="absolute top-20 -left-20 w-72 h-72 bg-amber-50 rounded-full opacity-40 blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
         </div>
 
@@ -47,7 +72,7 @@ export default function HomePage() {
               transition={{ duration: 0.6 }}
               className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm border border-slate-200/50 rounded-full mb-5 shadow-sm"
             >
-              <Utensils className="w-4 h-4 text-blue-600" strokeWidth={1.5} />
+              <Utensils className="w-4 h-4 text-accent" strokeWidth={1.5} />
               <p className="font-paragraph text-xs uppercase tracking-[0.2em] text-slate-600">
                 Campus Food Services
               </p>
@@ -59,7 +84,7 @@ export default function HomePage() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="font-heading text-[2.4rem] leading-[0.95] sm:text-6xl lg:text-[7rem] uppercase tracking-tight mb-6"
             >
-              COMSATS <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">Cafeteria</span> Portal
+              COMSATS <span className="bg-clip-text text-transparent bg-gradient-to-r from-sky-600 to-sky-700">Cafeteria</span> Portal
             </motion.h1>
             
             <motion.p 
@@ -77,10 +102,10 @@ export default function HomePage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
-                className="mt-5 inline-flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-full"
+                className="mt-5 inline-flex items-center gap-2 px-4 py-2 bg-sky-50 border border-sky-200 rounded-full"
               >
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                <p className="font-paragraph text-xs sm:text-sm uppercase tracking-[0.18em] text-green-700">
+                <div className="w-2 h-2 bg-sky-500 rounded-full animate-pulse" />
+                <p className="font-paragraph text-xs sm:text-sm uppercase tracking-[0.18em] text-sky-700">
                   Signed in as {user.role}
                 </p>
               </motion.div>
@@ -94,14 +119,14 @@ export default function HomePage() {
             >
               <Link
                 to={user?.role === 'admin' ? '/admin' : '/menu'}
-                className="group inline-flex items-center justify-center px-6 sm:px-8 py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-paragraph text-xs sm:text-sm uppercase tracking-widest rounded-xl shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-blue-800 transition-all transform hover:scale-[1.02]"
+                className="group inline-flex items-center justify-center px-6 sm:px-8 py-3.5 bg-gradient-to-r from-sky-600 to-sky-700 text-white font-paragraph text-xs sm:text-sm uppercase tracking-widest rounded-xl shadow-lg hover:shadow-xl hover:from-sky-700 hover:to-accent transition-all transform hover:scale-[1.02]"
               >
                 Open Portal
                 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
                 to={user?.role === 'student' || user?.role === 'admin' ? '/orders' : '/login'}
-                className="inline-flex items-center justify-center px-6 sm:px-8 py-3.5 border-2 border-slate-300 text-slate-700 font-paragraph text-xs sm:text-sm uppercase tracking-widest rounded-xl hover:border-blue-600 hover:text-blue-600 hover:bg-blue-50 transition-all"
+                className="inline-flex items-center justify-center px-6 sm:px-8 py-3.5 border-2 border-slate-300 text-slate-700 font-paragraph text-xs sm:text-sm uppercase tracking-widest rounded-xl hover:border-accent hover:text-accent hover:bg-accent/5 transition-all"
               >
                 {user?.role === 'student' || user?.role === 'admin' ? 'View Orders' : 'Campus Login'}
               </Link>
@@ -128,7 +153,7 @@ export default function HomePage() {
             <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl uppercase tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900">Core Modules</h2>
             <p className="font-paragraph text-sm text-slate-500 mt-2">Everything you need for seamless cafeteria operations</p>
           </div>
-          <div className="w-full sm:w-1/2 h-1 bg-gradient-to-r from-blue-600 to-blue-800 rounded-full" />
+          <div className="w-full sm:w-1/2 h-1 bg-gradient-to-r from-sky-600 to-sky-700 rounded-full" />
         </div>
 
         {features.length > 0 ? (
@@ -150,10 +175,10 @@ export default function HomePage() {
                   className="group relative bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-card shadow-card-hover hover:shadow-xl transition-all overflow-hidden"
                 >
                   {/* Gradient background on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   
                   <div className="relative z-10 flex flex-col min-h-[230px]">
-                    <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <div className="w-14 h-14 bg-gradient-to-br from-sky-600 to-sky-700 rounded-2xl flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300">
                       <FeatureIcon className="w-7 h-7 text-white" strokeWidth={1.4} />
                     </div>
                     <h3 className="font-heading text-lg sm:text-xl uppercase tracking-wide mb-3 text-slate-900">{feature.title}</h3>
@@ -164,7 +189,7 @@ export default function HomePage() {
                       </span>
                       <Link
                         to={feature.link}
-                        className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg transform group-hover:rotate-45 duration-300"
+                        className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-600 to-sky-700 flex items-center justify-center hover:from-sky-700 hover:to-accent transition-all shadow-md hover:shadow-lg transform group-hover:rotate-45 duration-300"
                         aria-label={`Go to ${feature.title}`}
                       >
                         <ArrowRight className="w-4 h-4 text-white" />
@@ -188,13 +213,13 @@ export default function HomePage() {
       <section className="w-full max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-10 py-14 sm:py-20 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white relative overflow-hidden">
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl" />
+          <div className="absolute top-0 left-0 w-96 h-96 bg-sky-500 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-500 rounded-full blur-3xl" />
         </div>
 
         <div className="relative z-10 grid grid-cols-12 gap-6 sm:gap-8">
           <div className="col-span-12 md:col-span-3">
-            <h2 className="font-heading text-xl sm:text-2xl uppercase tracking-widest text-blue-400 mb-2">Access Levels</h2>
+            <h2 className="font-heading text-xl sm:text-2xl uppercase tracking-widest text-sky-400 mb-2">Access Levels</h2>
             <p className="font-paragraph text-sm text-slate-400">Choose your role</p>
           </div>
           <div className="col-span-12 md:col-span-9">
@@ -206,7 +231,7 @@ export default function HomePage() {
                     index !== roleCards.length - 1 ? 'md:pr-6 lg:pr-8' : ''
                   } hover:bg-white/5 rounded-2xl transition-colors duration-300`}
                 >
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-sky-700 rounded-xl flex items-center justify-center mb-4">
                     <Users className="w-6 h-6 text-white" strokeWidth={1.5} />
                   </div>
                   <h3 className="font-heading text-lg sm:text-xl uppercase mb-3 text-white">{role.title}</h3>
@@ -222,27 +247,27 @@ export default function HomePage() {
       <section className="w-full max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-10 py-14 sm:py-20">
         <div className="grid grid-cols-12 gap-8">
           <div className="col-span-12 md:col-span-4">
-            <p className="font-paragraph text-xs sm:text-sm uppercase tracking-[0.2em] text-blue-600 mb-3 font-semibold">Support</p>
+            <p className="font-paragraph text-xs sm:text-sm uppercase tracking-[0.2em] text-sky-600 mb-3 font-semibold">Support</p>
             <h2 className="font-heading text-2xl sm:text-4xl uppercase tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900">Contact Channels</h2>
             <p className="font-paragraph text-sm text-slate-500 mt-2">Get in touch with our team</p>
           </div>
           <div className="col-span-12 md:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-            <a href="mailto:cafeteria@comsats.edu.pk" className="group bg-white border border-slate-200 p-5 sm:p-6 rounded-2xl shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 block">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <a href="mailto:cafeteria@comsats.edu.pk" className="group bg-white border border-slate-200 p-5 sm:p-6 rounded-2xl shadow-sm hover:shadow-xl hover:border-sky-200 transition-all duration-300 block">
+              <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-sky-700 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Mail className="w-5 h-5 text-white" strokeWidth={1.5} />
               </div>
               <p className="font-heading text-base sm:text-lg uppercase mb-1.5 text-slate-900">Email</p>
               <p className="font-paragraph text-sm text-slate-600 group-hover:text-slate-900 transition-colors">cafeteria@comsats.edu.pk</p>
             </a>
-            <a href="tel:+925112345678" className="group bg-white border border-slate-200 p-5 sm:p-6 rounded-2xl shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 block">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-700 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <a href="tel:+925112345678" className="group bg-white border border-slate-200 p-5 sm:p-6 rounded-2xl shadow-sm hover:shadow-xl hover:border-sky-200 transition-all duration-300 block">
+              <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-sky-700 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Phone className="w-5 h-5 text-white" strokeWidth={1.5} />
               </div>
               <p className="font-heading text-base sm:text-lg uppercase mb-1.5 text-slate-900">Phone</p>
               <p className="font-paragraph text-sm text-slate-600 group-hover:text-slate-900 transition-colors">+92 (51) 1234-5678</p>
             </a>
-            <a href="https://wa.me/923000000000" target="_blank" rel="noopener noreferrer" className="group bg-white border border-slate-200 p-5 sm:p-6 rounded-2xl shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 block">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <a href="https://wa.me/923000000000" target="_blank" rel="noopener noreferrer" className="group bg-white border border-slate-200 p-5 sm:p-6 rounded-2xl shadow-sm hover:shadow-xl hover:border-sky-200 transition-all duration-300 block">
+              <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-sky-700 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <MessageCircle className="w-5 h-5 text-white" strokeWidth={1.5} />
               </div>
               <p className="font-heading text-base sm:text-lg uppercase mb-1.5 text-slate-900">WhatsApp</p>
@@ -254,7 +279,7 @@ export default function HomePage() {
 
       {/* CTA Section */}
       <section className="w-full max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-10 pb-20 sm:pb-28">
-        <div className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 p-6 sm:p-10 lg:p-16 rounded-3xl overflow-hidden shadow-2xl">
+        <div className="relative bg-gradient-to-br from-sky-600 via-sky-700 to-sky-800 p-6 sm:p-10 lg:p-16 rounded-3xl overflow-hidden shadow-2xl">
           {/* Decorative circles */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-amber-500/20 rounded-full blur-3xl" />
@@ -267,26 +292,26 @@ export default function HomePage() {
               transition={{ duration: 0.6 }}
             >
               <h2 className="font-heading text-3xl sm:text-5xl uppercase tracking-tight text-white mb-4 sm:mb-6">Start Service</h2>
-              <p className="font-paragraph text-sm sm:text-lg text-blue-100 mb-8 sm:mb-10">
+              <p className="font-paragraph text-sm sm:text-lg text-sky-100 mb-8 sm:mb-10">
                 Sign in with your campus role or open the menu to start a new order.
               </p>
 
               <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-3 sm:gap-4">
                 <Link
                   to="/menu"
-                  className="inline-flex items-center justify-center px-6 sm:px-8 py-3.5 bg-white text-blue-700 font-paragraph text-xs sm:text-sm uppercase tracking-widest rounded-xl shadow-lg hover:shadow-xl hover:bg-blue-50 transition-all transform hover:scale-105 font-semibold"
+                  className="inline-flex items-center justify-center px-6 sm:px-8 py-3.5 bg-white text-sky-700 font-paragraph text-xs sm:text-sm uppercase tracking-widest rounded-xl shadow-lg hover:shadow-xl hover:bg-sky-50 transition-all transform hover:scale-105 font-semibold"
                 >
                   Browse Menu
                 </Link>
                 <Link
                   to="/login"
-                  className="inline-flex items-center justify-center px-6 sm:px-8 py-3.5 border-2 border-white text-white font-paragraph text-xs sm:text-sm uppercase tracking-widest rounded-xl hover:bg-white hover:text-blue-700 transition-all font-semibold"
+                  className="inline-flex items-center justify-center px-6 sm:px-8 py-3.5 border-2 border-white text-white font-paragraph text-xs sm:text-sm uppercase tracking-widest rounded-xl hover:bg-white hover:text-sky-700 transition-all font-semibold"
                 >
                   Login
                 </Link>
                 <Link
                   to="/register"
-                  className="inline-flex items-center justify-center px-6 sm:px-8 py-3.5 bg-blue-900/30 backdrop-blur-sm border border-white/30 text-white font-paragraph text-xs sm:text-sm uppercase tracking-widest rounded-xl hover:bg-blue-900/50 transition-all"
+                  className="inline-flex items-center justify-center px-6 sm:px-8 py-3.5 bg-sky-900/30 backdrop-blur-sm border border-white/30 text-white font-paragraph text-xs sm:text-sm uppercase tracking-widest rounded-xl hover:bg-sky-900/50 transition-all"
                 >
                   Register
                 </Link>

@@ -3,13 +3,17 @@ import { Menu, X, LogOut, User, Utensils } from 'lucide-react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Cart from '@/components/Cart';
-import { useAuthStore } from '@/store/authStore';
+import { useAuth } from '@/contexts/AuthContext';
+import { logoutUser } from '@/lib/emailAuth';
 import { getNavItemsForRole } from '@/lib/access';
+import { useNavigate } from 'react-router-dom';
+import ComsatsLogo from '@/components/ui/ComsatsLogo';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const navLinks = getNavItemsForRole(user?.role);
 
   const isActive = (path: string) => {
@@ -19,9 +23,9 @@ export default function Header() {
     return location.pathname.startsWith(path);
   };
 
-  const handleLogout = () => {
-    logout();
-    window.location.href = '/login';
+  const handleLogout = async () => {
+    await logoutUser();
+    navigate('/login');
   };
 
   return (
@@ -31,10 +35,13 @@ export default function Header() {
           <div className="flex items-center justify-between h-16 sm:h-20">
             {/* Logo */}
             <Link to="/" className="group flex items-center gap-2 font-heading text-lg md:text-xl text-foreground uppercase tracking-tight hover:opacity-80 transition-opacity">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
-                <Utensils className="w-4 h-4 sm:w-5 sm:h-5 text-white" strokeWidth={1.5} />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center transition-shadow overflow-hidden">
+                <ComsatsLogo size="sm" />
               </div>
-              <span className="hidden sm:inline bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900">Comsats Cafeteria</span>
+              <div className="flex flex-col">
+                <span className="hidden sm:inline bg-clip-text text-transparent bg-gradient-to-r from-accent via-accent-light to-accent font-bold leading-none">Comsats</span>
+                <span className="hidden sm:inline bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900 text-[10px] tracking-[0.2em]">Cafeteria Portal</span>
+              </div>
               <span className="sm:hidden bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900">Cafeteria</span>
             </Link>
 
@@ -46,7 +53,7 @@ export default function Header() {
                   to={link.path}
                   className={`relative font-paragraph text-xs sm:text-sm uppercase tracking-wide px-4 py-2 rounded-lg transition-all ${
                     isActive(link.path)
-                      ? 'text-blue-600 bg-blue-50 font-semibold'
+                      ? 'text-accent bg-accent/5 font-semibold'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
                   }`}
                 >
@@ -54,7 +61,7 @@ export default function Header() {
                   {isActive(link.path) && (
                     <motion.div
                       layoutId="activeNav"
-                      className="absolute inset-0 bg-blue-50 rounded-lg -z-10"
+                      className="absolute inset-0 bg-accent/5 rounded-lg -z-10"
                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                     />
                   )}
@@ -67,7 +74,7 @@ export default function Header() {
               {user ? (
                 <>
                   <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-slate-100 to-slate-50 rounded-xl border border-slate-200/50 shadow-sm">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-br from-accent to-accent-light rounded-full flex items-center justify-center">
                       <User className="w-4 h-4 text-white" strokeWidth={1.5} />
                     </div>
                     <div className="flex flex-col">
@@ -90,7 +97,7 @@ export default function Header() {
               ) : (
                 <Link
                   to="/login"
-                  className="group px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-paragraph text-xs uppercase tracking-wide hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg font-semibold"
+                  className="group px-5 py-2.5 bg-accent text-white rounded-xl font-paragraph text-xs uppercase tracking-wide hover:bg-accent-dark transition-all shadow-md hover:shadow-lg font-semibold"
                 >
                   Login
                 </Link>
@@ -127,7 +134,7 @@ export default function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     className={`font-paragraph text-sm uppercase tracking-wide px-4 py-3 rounded-lg transition-all ${
                       isActive(link.path)
-                        ? 'text-blue-600 bg-blue-50 font-semibold'
+                        ? 'text-accent bg-accent/5 font-semibold'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
                   >
@@ -138,7 +145,7 @@ export default function Header() {
                   <>
                     <div className="mx-4 mt-2 p-4 bg-gradient-to-br from-slate-100 to-slate-50 rounded-xl border border-slate-200/50">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-accent to-accent-light rounded-full flex items-center justify-center">
                           <User className="w-5 h-5 text-white" strokeWidth={1.5} />
                         </div>
                         <div className="flex flex-col">
@@ -163,7 +170,7 @@ export default function Header() {
                   <Link
                     to="/login"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="mx-4 mt-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-paragraph text-sm uppercase tracking-wide hover:from-blue-700 hover:to-blue-800 transition-all text-center font-semibold"
+                    className="mx-4 mt-2 px-4 py-3 bg-accent text-white rounded-xl font-paragraph text-sm uppercase tracking-wide hover:bg-accent-dark transition-all text-center font-semibold"
                   >
                     Login
                   </Link>

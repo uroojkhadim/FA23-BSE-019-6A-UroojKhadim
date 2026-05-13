@@ -1,301 +1,179 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Mail, Lock, AlertCircle, CheckCircle2, Send, LogIn } from 'lucide-react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import { BaseCrudService } from '@/integrations';
-import { Students, Teachers, Administrators } from '@/entities/index';
-import { useAuthStore, type UserRole } from '@/store/authStore';
-import { loginUser, resendVerificationEmail } from '@/lib/emailAuth';
-import { auth } from '@/lib/firebase-config';
-import { onAuthStateChanged } from 'firebase/auth';
+import { Mail, Lock, AlertCircle, LogIn } from 'lucide-center';
+import { Mail as MailIcon, Lock as LockIcon, AlertCircle as AlertIcon, LogIn as LogInIcon } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { loginUser } from '@/lib/emailAuth';
+import { useAuthStore } from '@/store/authStore';
+import { motion } from 'framer-motion';
+import ComsatsLogo from '@/components/ui/ComsatsLogo';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, loading } = useAuth();
   const { setUser } = useAuthStore();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('student');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [isResendingEmail, setIsResendingEmail] = useState(false);
-  const [showResendButton, setShowResendButton] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Get message from navigation state (from registration)
-  const messageFromState = location.state as { message?: string; email?: string };
-
-  // Monitor auth state for unverified users
-  React.useEffect(() => {
-    if (messageFromState?.email) {
-      setEmail(messageFromState.email);
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!loading && user) {
+      const roleDashboardMap: Record<string, string> = {
+        super_admin: '/super-admin/dashboard',
+        admin: '/admin/dashboard',
+        staff: '/staff/dashboard',
+        teacher: '/teacher/dashboard',
+        university_staff: '/university-staff/dashboard',
+        student: '/student/dashboard',
+      };
+      
+      const from = (location.state as any)?.from?.pathname || roleDashboardMap[user.role] || '/dashboard';
+      navigate(from, { replace: true });
     }
-    
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && !user.emailVerified) {
-        setShowResendButton(true);
-      } else if (user && user.emailVerified) {
-        setShowResendButton(false);
-      }
-    });
-    return () => unsubscribe();
-  }, [messageFromState]);
-
-  const findUserByEmail = async (
-    collectionId: 'students' | 'teachers' | 'admins',
-    normalizedEmail: string,
-  ) => {
-    let skip = 0;
-    while (true) {
-      const result = await BaseCrudService.getAll<Students | Teachers | Administrators>(
-        collectionId,
-        undefined,
-        { limit: 1000, skip },
-      );
-      const found = result.items.find((item) => item.email?.toLowerCase() === normalizedEmail);
-      if (found) return found;
-      if (!result.hasNext || result.nextSkip === null) return null;
-      skip = result.nextSkip;
-    }
-  };
+  }, [user, loading, navigate, location]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setSuccess('');
 
     if (!email || !password) {
       setError('Please enter both email and password.');
       return;
     }
 
-    setLoading(true);
+    setIsSubmitting(true);
     try {
-      // Login with Firebase
       const result = await loginUser(email, password);
-
-      if (result && result.verified) {
-        // Find user in database
-        const roleToCollection = {
-          student: 'students',
-          teacher: 'teachers',
-          admin: 'admins',
-        } as const;
-
-        const collectionId = roleToCollection[role];
-        const dbUser = await findUserByEmail(collectionId, email.toLowerCase());
-
-        if (dbUser) {
-          // Set user in auth store
-          setUser({
-            _id: (dbUser as any)._id || (dbUser as any).id || '',
-            email: dbUser.email,
-            fullName: (dbUser as any).fullName || (dbUser as any).name || 'User',
-            role: role,
-          });
-
-          // Navigate based on role
-          const roleRoutes = {
-            student: '/student/dashboard',
-            teacher: '/teacher/dashboard',
-            admin: '/admin/dashboard',
-          };
-          navigate(roleRoutes[role]);
-        } else {
-          // User exists in Firebase but not in database
-          // This can happen for old registrations or database issues
-          console.warn('User exists in Firebase but not in database:', email);
-          setError('User profile not found. Please complete your registration or contact support.');
-          
-          // Optionally redirect to registration completion page
-          // For now, suggest re-registration
-          setTimeout(() => {
-            if (window.confirm('Your user profile is incomplete. Would you like to register again?')) {
-              navigate('/register');
-            }
-          }, 2000);
-        }
-      } else if (result && !result.verified) {
-        // Email not verified
-        setShowResendButton(true);
+      
+      if (result && result.user) {
+        setUser(result.user);
+        // Navigation is handled by useEffect
       } else {
-        setError('Login failed. Please check your credentials.');
+        // Fallback for emergency bypass if backend is down (matching your requirement)
+        const isSuperAdminCreds = email === 'uroojkhadim505@gmail.com' && password === '12345678';
+        if (isSuperAdminCreds) {
+          const mockUser = {
+            _id: 'super-admin-id',
+            uid: 'super-admin-id',
+            fullName: 'Urooj Khadim',
+            email: email,
+            role: 'super_admin' as any,
+            status: 'active'
+          };
+          setUser(mockUser);
+          localStorage.setItem('auth_user', JSON.stringify(mockUser));
+          toast.success('Super Admin Bypass Active');
+        } else {
+          setError('Invalid credentials or server unreachable.');
+        }
       }
     } catch (err: any) {
       console.error('Login error:', err);
-      setError('An unexpected error occurred. Please try again.');
+      setError('Failed to connect to the local server. Make sure your Node.js backend is running.');
     } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendVerification = async () => {
-    if (!auth.currentUser) {
-      // Try to get user by email
-      setError('Please login first to resend verification email.');
-      return;
-    }
-
-    setIsResendingEmail(true);
-    try {
-      const success = await resendVerificationEmail(auth.currentUser);
-      if (success) {
-        setSuccess('✅ Verification email resent! Please check your inbox.');
-        setTimeout(() => setSuccess(''), 5000);
-      } else {
-        setError('Failed to resend verification email.');
-      }
-    } catch (error: any) {
-      console.error('Resend error:', error);
-      setError('Failed to resend verification email.');
-    } finally {
-      setIsResendingEmail(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary via-secondary to-accent flex flex-col">
-      <Header />
-      
-      <main className="flex-1 flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md">
-          {/* Glassmorphic Card */}
-          <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl border border-white/20 p-8">
-            <div className="text-center mb-8">
-              <h1 className="font-bold text-3xl mb-2 text-black">Welcome Back</h1>
-              <p className="font-paragraph text-sm text-black/80">
-                Sign in to access your account
-              </p>
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-cover bg-center" style={{ backgroundImage: 'linear-gradient(rgba(0, 102, 51, 0.8), rgba(0, 102, 51, 0.8)), url("https://images.unsplash.com/photo-1541339907198-e08756ebafe3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80")' }}>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="sm:mx-auto sm:w-full sm:max-w-md"
+      >
+        <div className="bg-white py-8 px-4 shadow-2xl sm:rounded-lg sm:px-10 border-t-4 border-[#0ea5e9]">
+          <div className="flex flex-col items-center mb-6">
+            <ComsatsLogo size="lg" className="mb-4" />
+            <h2 className="text-center text-3xl font-extrabold text-gray-900">
+              Cafeteria Portal
+            </h2>
+            <p className="mt-2 text-center text-sm text-gray-600 uppercase tracking-widest font-bold">
+              Local SQLite Edition
+            </p>
+          </div>
+
+          <form className="space-y-6" onSubmit={handleLogin}>
+            {error && (
+              <div className="bg-red-50 border-l-4 border-red-400 p-4 flex items-start">
+                <AlertIcon className="h-5 w-5 text-red-400 mr-3 mt-0.5" />
+                <p className="text-sm text-red-700 font-bold">{error}</p>
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="email" className="block text-xs font-bold text-gray-500 uppercase tracking-widest">
+                Email address
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MailIcon className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-3 bg-slate-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-[#0ea5e9] focus:border-[#0ea5e9] sm:text-sm font-medium"
+                  placeholder="name@comsats.edu.pk"
+                />
+              </div>
             </div>
 
-            {messageFromState?.message && (
-              <div className="mb-6 p-4 bg-blue-500/20 backdrop-blur-sm border border-blue-500/50 rounded-lg flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <p className="font-paragraph text-sm text-black">{messageFromState.message}</p>
-              </div>
-            )}
-
-            {error && (
-              <div className="mb-6 p-4 bg-red-500/20 backdrop-blur-sm border border-red-500/50 rounded-lg flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="font-paragraph text-sm text-black">{error}</p>
-              </div>
-            )}
-
-            {success && (
-              <div className="mb-6 p-4 bg-green-500/20 backdrop-blur-sm border border-green-500/50 rounded-lg flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                <p className="font-paragraph text-sm text-black">{success}</p>
-              </div>
-            )}
-
-            <form onSubmit={handleLogin} className="space-y-6">
-              {/* Email */}
-              <div className="space-y-3">
-                <label className="font-paragraph text-sm uppercase tracking-wide text-black mb-2 block">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your.email@example.com"
-                    className="w-full pl-12 pr-4 py-3 bg-white/50 border border-gray-300 rounded-lg font-paragraph text-base text-black placeholder:text-gray-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                    required
-                  />
+            <div>
+              <label htmlFor="password" className="block text-xs font-bold text-gray-500 uppercase tracking-widest">
+                Password
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <LockIcon className="h-5 w-5 text-gray-400" />
                 </div>
-              </div>
-
-              {/* Password */}
-              <div className="space-y-3">
-                <label className="font-paragraph text-sm uppercase tracking-wide text-black mb-2 block">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600" />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    className="w-full pl-12 pr-4 py-3 bg-white/50 border border-gray-300 rounded-lg font-paragraph text-base text-black placeholder:text-gray-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Role Selection */}
-              <div className="space-y-3">
-                <label className="font-paragraph text-sm uppercase tracking-wide text-black mb-2 block">
-                  Select Role
-                </label>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as UserRole)}
-                  className="w-full px-4 py-3 bg-white/50 border border-gray-300 rounded-lg font-paragraph text-base text-black focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
+                <input
+                  id="password"
+                  type="password"
                   required
-                >
-                  <option value="" disabled>Select your role</option>
-                  <option value="student">Student</option>
-                  <option value="teacher">Teacher</option>
-                  <option value="admin">Administrator</option>
-                </select>
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-3 bg-slate-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-[#0ea5e9] focus:border-[#0ea5e9] sm:text-sm font-medium"
+                  placeholder="••••••••"
+                />
               </div>
+            </div>
 
-              {/* Submit Button */}
+            <div>
               <button
                 type="submit"
-                disabled={loading}
-                className="w-full py-4 bg-primary text-white rounded-lg font-paragraph text-base uppercase tracking-wide hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold flex items-center justify-center gap-2"
+                disabled={isSubmitting}
+                className="w-full flex justify-center py-4 px-4 border border-transparent rounded-2xl shadow-xl text-sm font-bold text-white bg-[#0ea5e9] hover:bg-[#0284c7] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0ea5e9] transition-all duration-200 uppercase tracking-widest"
               >
-                {loading ? (
-                  'Logging in...'
+                {isSubmitting ? (
+                  <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 ) : (
-                  <>
-                    <LogIn className="w-5 h-5" />
-                    Login
-                  </>
+                  <div className="flex items-center">
+                    <LogInIcon className="mr-2 h-5 w-5" />
+                    Sign in
+                  </div>
                 )}
               </button>
+            </div>
+          </form>
 
-              {/* Resend Verification Email */}
-              {showResendButton && (
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={handleResendVerification}
-                    disabled={isResendingEmail}
-                    className="text-sm text-black/80 hover:text-black underline underline-offset-4 disabled:opacity-50 flex items-center justify-center gap-2 mx-auto"
-                  >
-                    {isResendingEmail ? (
-                      'Sending...'
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4" />
-                        Resend Verification Email
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
-
-              {/* Register Link */}
-              <p className="font-paragraph text-sm text-center text-black/70">
-                Don't have an account?{' '}
-                <Link to="/register" className="text-primary font-semibold hover:underline">
-                  Register here
-                </Link>
-              </p>
-            </form>
+          <div className="mt-8 pt-8 border-t border-gray-100">
+             <Link
+                to="/register"
+                className="w-full flex justify-center py-3 px-4 border-2 border-[#0ea5e9] rounded-2xl text-xs font-bold text-[#0ea5e9] bg-white hover:bg-sky-50 transition-all uppercase tracking-widest"
+              >
+                Create Local Account
+              </Link>
           </div>
         </div>
-      </main>
-
-      <Footer />
+      </motion.div>
     </div>
   );
 }

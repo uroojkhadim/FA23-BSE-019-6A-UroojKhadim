@@ -1,10 +1,11 @@
 import { create } from 'zustand';
-import { Students, Teachers, Administrators } from '@/entities';
 
-export type UserRole = 'student' | 'teacher' | 'admin';
+export type UserRole = 'student' | 'teacher' | 'admin' | 'super_admin' | 'staff' | 'university_staff';
+
 
 export interface AuthUser {
   _id: string;
+  uid: string; // Added to match Firestore document structure
   fullName?: string;
   email?: string;
   role: UserRole;
@@ -17,6 +18,10 @@ export interface AuthUser {
   universityName?: string;
   profilePicture?: string;
   adminRole?: string;
+  balance?: number; // For Udhar system
+  isVerified?: boolean;
+  createdAt?: any;
+  status?: string;
 }
 
 interface AuthStore {
@@ -24,39 +29,34 @@ interface AuthStore {
   isAuthenticated: boolean;
   setUser: (user: AuthUser | null) => void;
   logout: () => void;
-  hasPermission: (requiredRole: UserRole | UserRole[]) => boolean;
 }
 
-export const useAuthStore = create<AuthStore>((set, get) => ({
+export const useAuthStore = create<AuthStore>((set) => ({
   user: (() => {
     if (typeof window === 'undefined') return null;
-    const stored = sessionStorage.getItem('authUser');
-    return stored ? JSON.parse(stored) : null;
+    const stored = localStorage.getItem('authUser');
+    try {
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
   })(),
   isAuthenticated: (() => {
     if (typeof window === 'undefined') return false;
-    return !!sessionStorage.getItem('authUser');
+    return !!localStorage.getItem('authUser');
   })(),
 
   setUser: (user: AuthUser | null) => {
     if (user) {
-      sessionStorage.setItem('authUser', JSON.stringify(user));
+      localStorage.setItem('authUser', JSON.stringify(user));
     } else {
-      sessionStorage.removeItem('authUser');
+      localStorage.removeItem('authUser');
     }
     set({ user, isAuthenticated: !!user });
   },
 
   logout: () => {
-    sessionStorage.removeItem('authUser');
+    localStorage.removeItem('authUser');
     set({ user: null, isAuthenticated: false });
-  },
-
-  hasPermission: (requiredRole: UserRole | UserRole[]) => {
-    const { user } = get();
-    if (!user) return false;
-    
-    const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-    return roles.includes(user.role);
   },
 }));

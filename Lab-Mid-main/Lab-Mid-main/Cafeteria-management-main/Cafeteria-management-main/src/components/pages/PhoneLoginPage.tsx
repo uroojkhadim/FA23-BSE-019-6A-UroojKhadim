@@ -16,6 +16,8 @@ import {
 import { usePhoneAuth } from '@/hooks/use-phone-auth';
 import { validatePakistaniPhone, formatPhoneNumber } from '@/lib/phoneValidator';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const PhoneLoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { sendOtp, verifyOtp, loading: isPhoneLoading } = usePhoneAuth();
@@ -67,7 +69,7 @@ const PhoneLoginPage: React.FC = () => {
       } else {
         // Use Twilio for Call OTP
         const formattedNumber = formatPhoneNumber(phoneNumber);
-        const response = await axios.post('http://localhost:5000/api/phone-auth/send-call-otp', {
+        const response = await axios.post(`${API_URL}/phone-auth/send-call-otp`, {
           phoneNumber: formattedNumber
         });
 
@@ -129,7 +131,7 @@ const PhoneLoginPage: React.FC = () => {
       } else {
         // Twilio call verification
         const formattedNumber = formatPhoneNumber(phoneNumber);
-        const response = await axios.post('http://localhost:5000/api/phone-auth/verify-otp', {
+        const response = await axios.post(`${API_URL}/phone-auth/verify-otp`, {
           phoneNumber: formattedNumber,
           otp: otpCode
         });
@@ -165,7 +167,7 @@ const PhoneLoginPage: React.FC = () => {
         }
       } else {
         // For Call, use backend resend endpoint
-        const response = await axios.post('http://localhost:5000/api/phone-auth/resend-otp', {
+        const response = await axios.post(`${API_URL}/phone-auth/resend-otp`, {
           phoneNumber: formattedNumber,
           method: 'call'
         });
@@ -182,11 +184,11 @@ const PhoneLoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#050505] text-slate-100 p-6 selection:bg-blue-500/30">
+    <div className="min-h-screen flex items-center justify-center bg-[#050505] text-slate-100 p-6 selection:bg-sky-500/30">
       {/* Background Ambience */}
       <div className="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
-        <div className="absolute top-[10%] left-[10%] w-[500px] h-[500px] bg-blue-600/10 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[10%] right-[10%] w-[400px] h-[400px] bg-emerald-600/10 blur-[100px] rounded-full delay-700 animate-pulse" />
+        <div className="absolute top-[10%] left-[10%] w-[500px] h-[500px] bg-sky-600/10 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[10%] right-[10%] w-[400px] h-[400px] bg-sky-600/10 blur-[100px] rounded-full delay-700 animate-pulse" />
       </div>
 
       <motion.div 
@@ -207,8 +209,8 @@ const PhoneLoginPage: React.FC = () => {
                 className="space-y-8"
               >
                 <header className="text-center space-y-3">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-blue-500/10 text-blue-400 mb-2 relative">
-                    <div className="absolute inset-0 bg-blue-400 blur-2xl opacity-20" />
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-400 mb-2 relative">
+                    <div className="absolute inset-0 bg-sky-400 blur-2xl opacity-20" />
                     <Phone className="w-10 h-10 relative z-10" />
                   </div>
                   <h1 className="text-4xl font-extrabold tracking-tight">Phone Verification</h1>
@@ -220,13 +222,13 @@ const PhoneLoginPage: React.FC = () => {
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Phone Number</label>
                     <div className="relative group">
-                      <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 font-mono transition-colors group-focus-within:text-blue-400 font-bold">+</div>
+                      <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 font-mono transition-colors group-focus-within:text-sky-400 font-bold">+</div>
                       <input 
                         type="text"
                         placeholder="923XXXXXXXXX"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                        className="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-5 pl-10 pr-6 focus:ring-2 focus:ring-blue-500/40 outline-none transition-all placeholder:text-slate-700 font-mono text-lg tracking-wider"
+                        className="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-5 pl-10 pr-6 focus:ring-2 focus:ring-sky-500/40 outline-none transition-all placeholder:text-slate-700 font-mono text-lg tracking-wider"
                       />
                     </div>
                   </div>
@@ -240,7 +242,7 @@ const PhoneLoginPage: React.FC = () => {
                         onClick={() => setOtpMethod('sms')}
                         className={`flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all duration-300 ${
                           otpMethod === 'sms'
-                            ? 'bg-blue-500/20 border-blue-500/50 text-blue-400 shadow-lg shadow-blue-500/20'
+                            ? 'bg-sky-500/20 border-sky-500/50 text-sky-400 shadow-lg shadow-sky-500/20'
                             : 'bg-slate-900/30 border-white/5 text-slate-400 hover:border-white/10'
                         }`}
                       >
@@ -252,7 +254,7 @@ const PhoneLoginPage: React.FC = () => {
                         onClick={() => setOtpMethod('call')}
                         className={`flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all duration-300 ${
                           otpMethod === 'call'
-                            ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400 shadow-lg shadow-emerald-500/20'
+                            ? 'bg-sky-500/20 border-sky-500/50 text-sky-400 shadow-lg shadow-sky-500/20'
                             : 'bg-slate-900/30 border-white/5 text-slate-400 hover:border-white/10'
                         }`}
                       >
@@ -272,7 +274,7 @@ const PhoneLoginPage: React.FC = () => {
                   <button 
                     onClick={handleSendOTP}
                     disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-500 active:scale-[0.98] disabled:opacity-50 text-white font-bold h-16 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-xl shadow-blue-900/20 group"
+                    className="w-full bg-sky-600 hover:bg-sky-500 active:scale-[0.98] disabled:opacity-50 text-white font-bold h-16 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-xl shadow-sky-900/20 group"
                   >
                     {loading ? (
                       <Loader2 className="w-6 h-6 animate-spin" />
@@ -296,15 +298,15 @@ const PhoneLoginPage: React.FC = () => {
                 className="space-y-8"
               >
                 <header className="text-center space-y-3">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-emerald-500/10 text-emerald-400 mb-2 relative">
-                    <div className="absolute inset-0 bg-emerald-400 blur-2xl opacity-20" />
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-400 mb-2 relative">
+                    <div className="absolute inset-0 bg-sky-400 blur-2xl opacity-20" />
                     <ShieldCheck className="w-10 h-10 relative z-10" />
                   </div>
                   <h1 className="text-4xl font-extrabold tracking-tight">Enter OTP</h1>
                   <p className="text-slate-400 font-medium">
                     {otpMethod === 'sms' ? 'SMS' : 'Call'} sent to <span className="text-slate-100 font-bold">+{phoneNumber}</span>
                   </p>
-                  <button onClick={() => setStep(1)} className="text-blue-400 text-xs font-bold hover:underline underline-offset-4">Change Number</button>
+                  <button onClick={() => setStep(1)} className="text-sky-400 text-xs font-bold hover:underline underline-offset-4">Change Number</button>
                 </header>
 
                 <div className="space-y-8">
@@ -319,7 +321,7 @@ const PhoneLoginPage: React.FC = () => {
                         value={digit}
                         onChange={(e) => handleOtpChange(index, e.target.value)}
                         onKeyDown={(e) => handleKeyDown(index, e)}
-                        className="w-12 h-16 sm:w-14 sm:h-20 bg-slate-900/50 border border-white/10 rounded-2xl text-center text-3xl font-black focus:ring-2 focus:ring-emerald-500/40 outline-none transition-all shadow-inner"
+                        className="w-12 h-16 sm:w-14 sm:h-20 bg-slate-900/50 border border-white/10 rounded-2xl text-center text-3xl font-black focus:ring-2 focus:ring-sky-500/40 outline-none transition-all shadow-inner"
                       />
                     ))}
                   </div>
@@ -333,7 +335,7 @@ const PhoneLoginPage: React.FC = () => {
                     )}
 
                     {success && (
-                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-start gap-3 text-emerald-400 text-sm bg-emerald-400/10 p-4 rounded-2xl border border-emerald-400/20">
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-start gap-3 text-sky-400 text-sm bg-sky-400/10 p-4 rounded-2xl border border-sky-400/20">
                         <CircleCheck className="w-5 h-5 shrink-0 mt-0.5" />
                         <span className="font-bold">{success}</span>
                       </motion.div>
@@ -343,7 +345,7 @@ const PhoneLoginPage: React.FC = () => {
                       <button 
                         onClick={handleVerify}
                         disabled={loading || !!success}
-                        className="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] disabled:opacity-50 text-white font-bold h-16 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-xl shadow-emerald-900/20"
+                        className="w-full bg-sky-600 hover:bg-sky-500 active:scale-[0.98] disabled:opacity-50 text-white font-bold h-16 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-xl shadow-sky-900/20"
                       >
                         {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "VERIFY NOW"}
                       </button>
@@ -355,7 +357,7 @@ const PhoneLoginPage: React.FC = () => {
                           <button 
                             onClick={handleResendOTP}
                             disabled={loading}
-                            className="text-sm font-bold text-blue-400 hover:text-blue-300 flex items-center gap-2 mx-auto focus:outline-none disabled:opacity-50"
+                            className="text-sm font-bold text-sky-400 hover:text-sky-300 flex items-center gap-2 mx-auto focus:outline-none disabled:opacity-50"
                           >
                             <RefreshCcw className="w-4 h-4" /> RESEND OTP
                           </button>
@@ -369,7 +371,7 @@ const PhoneLoginPage: React.FC = () => {
           </AnimatePresence>
 
           <footer className="mt-12 flex items-center justify-center gap-2 border-t border-white/5 pt-8">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]" />
+            <div className="w-2 h-2 rounded-full bg-sky-500 animate-pulse shadow-[0_0_10px_#10b981]" />
             <span className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-500">Secure Authentication</span>
           </footer>
         </div>

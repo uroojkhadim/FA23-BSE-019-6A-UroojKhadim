@@ -21,7 +21,7 @@ export const sendPendingPaymentEmail = async (userEmail, orderDetails) => {
     const mailOptions = {
       from: `"Uni Cafe" <${process.env.EMAIL_USER}>`,
       to: userEmail,
-      subject: 'Payment Pending - Uni Cafe',
+      subject: 'Payment Pending - COMSATS Cafeteria',
       html: `
         <!DOCTYPE html>
         <html>
@@ -29,25 +29,25 @@ export const sendPendingPaymentEmail = async (userEmail, orderDetails) => {
           <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .header { background: #003366; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
             .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-            .order-details { background: white; padding: 20px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #667eea; }
-            .button { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; }
+            .order-details { background: white; padding: 20px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #003366; }
+            .button { display: inline-block; background: #003366; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; }
             .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
           </style>
         </head>
         <body>
           <div class="container">
             <div class="header">
-              <h1>🍽️ Uni Cafe</h1>
-              <p>Payment Notification</p>
+              <h1>COMSATS Cafeteria</h1>
+              <p>Secure Campus Food Portal</p>
             </div>
             
             <div class="content">
               <h2>Payment Pending</h2>
               <p>Dear Valued Customer,</p>
               
-              <p>Your order is pending payment. Please complete your payment to confirm your order.</p>
+              <p>Your order is pending payment. Please complete your payment or visit the counter to confirm your order.</p>
               
               <div class="order-details">
                 <h3>Order Details:</h3>
@@ -69,25 +69,25 @@ export const sendPendingPaymentEmail = async (userEmail, orderDetails) => {
               <p>Please visit our cafe or contact us to complete your payment.</p>
               
               <div style="text-align: center;">
-                <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/student/orders" class="button">View Order</a>
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/orders" class="button">View Order</a>
               </div>
               
               <p>If you have any questions, please don't hesitate to contact us.</p>
               
               <p>Best regards,<br/>
-              <strong>Uni Cafe Team</strong></p>
+              <strong>COMSATS Cafeteria Team</strong></p>
             </div>
             
             <div class="footer">
               <p>This is an automated message. Please do not reply to this email.</p>
-              <p>&copy; ${new Date().getFullYear()} Uni Cafe. All rights reserved.</p>
+              <p>&copy; ${new Date().getFullYear()} COMSATS University Islamabad. All rights reserved.</p>
             </div>
           </div>
         </body>
         </html>
       `,
       text: `
-        Payment Pending - Uni Cafe
+        Payment Pending - COMSATS Cafeteria
         
         Dear Valued Customer,
         
@@ -102,7 +102,7 @@ export const sendPendingPaymentEmail = async (userEmail, orderDetails) => {
         Please visit our cafe or contact us to complete your payment.
         
         Best regards,
-        Uni Cafe Team
+        COMSATS Cafeteria Team
         
         This is an automated message. Please do not reply to this email.
       `,
@@ -134,7 +134,7 @@ export const sendOrderStatusUpdateEmail = async (userEmail, orderDetails, newSta
     const statusInfo = statusColors[newStatus] || { color: '#666', text: newStatus };
     
     const mailOptions = {
-      from: `"Uni Cafe" <${process.env.EMAIL_USER}>`,
+      from: `"COMSATS Cafeteria" <${process.env.EMAIL_USER}>`,
       to: userEmail,
       subject: `Order Status Update - ${newStatus}`,
       html: `
@@ -144,7 +144,7 @@ export const sendOrderStatusUpdateEmail = async (userEmail, orderDetails, newSta
           <style>
             body { font-family: Arial, sans-serif; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .header { background: #003366; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
             .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
             .status-badge { display: inline-block; background: ${statusInfo.color}; color: white; padding: 8px 20px; border-radius: 20px; font-weight: bold; }
             .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
@@ -153,7 +153,7 @@ export const sendOrderStatusUpdateEmail = async (userEmail, orderDetails, newSta
         <body>
           <div class="container">
             <div class="header">
-              <h1>🍽️ Uni Cafe</h1>
+              <h1>COMSATS Cafeteria</h1>
               <p>Order Status Update</p>
             </div>
             
@@ -171,11 +171,11 @@ export const sendOrderStatusUpdateEmail = async (userEmail, orderDetails, newSta
               <p>Thank you for ordering with us!</p>
               
               <p>Best regards,<br/>
-              <strong>Uni Cafe Team</strong></p>
+              <strong>COMSATS Cafeteria Team</strong></p>
             </div>
             
             <div class="footer">
-              <p>&copy; ${new Date().getFullYear()} Uni Cafe. All rights reserved.</p>
+              <p>&copy; ${new Date().getFullYear()} COMSATS University Islamabad. All rights reserved.</p>
             </div>
           </div>
         </body>

@@ -8,7 +8,7 @@ import { Image } from '@/components/ui/image';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { useAuthStore } from '@/store/authStore';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function MenuItemDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -16,7 +16,7 @@ export default function MenuItemDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const { addingItemId, actions } = useCart();
   const { currency } = useCurrency();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadMenuItem();
