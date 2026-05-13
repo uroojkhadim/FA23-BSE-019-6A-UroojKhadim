@@ -260,6 +260,9 @@ SceenShots
 <img width="1365" height="628" alt="Screenshot 2026-05-14 001910" src="https://github.com/user-attachments/assets/88482545-da2b-40a5-a7b1-2ba6bc6a2dcc" />
 <img width="1331" height="635" alt="Screenshot 2026-05-14 001943" src="https://github.com/user-attachments/assets/a2f4eb22-5383-4b6f-86e8-3376cb9cbfd3" />
 
-
+Frontend
+https://cui-plagiarism-portal-frontend.vercel.app/
+Backend
+https://cui-plagiarism-portal.vercel.app/
 
 
