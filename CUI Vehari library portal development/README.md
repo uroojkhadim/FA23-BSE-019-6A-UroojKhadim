@@ -252,3 +252,14 @@ After starting the backend, the following accounts are automatically seeded:
   notes: String
 }
 ```
+SceenShots
+<img width="1340" height="635" alt="Screenshot 2026-05-14 002017" src="https://github.com/user-attachments/assets/90016e66-0abb-4d38-be5c-9e06ee9e4dde" />
+<img width="1344" height="624" alt="Screenshot 2026-05-14 001811" src="https://github.com/user-attachments/assets/7de4f590-6cec-4a44-9f48-f9df64657910" />
+<img width="1365" height="630" alt="Screenshot 2026-05-14 001836" src="https://github.com/user-attachments/assets/b7c99b1a-ee3e-4778-b6f0-9788eda36a51" />
+<img width="1345" height="632" alt="Screenshot 2026-05-14 001738" src="https://github.com/user-attachments/assets/794c4340-de34-44a9-827c-b1fed6118394" />
+<img width="1365" height="628" alt="Screenshot 2026-05-14 001910" src="https://github.com/user-attachments/assets/88482545-da2b-40a5-a7b1-2ba6bc6a2dcc" />
+<img width="1331" height="635" alt="Screenshot 2026-05-14 001943" src="https://github.com/user-attachments/assets/a2f4eb22-5383-4b6f-86e8-3376cb9cbfd3" />
+
+
+
+
