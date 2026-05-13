@@ -12,17 +12,21 @@ const SubmissionSchema = new mongoose.Schema({
   status: { 
     type: String, 
     enum: [
+      'pending', 
       'pending_supervisor', 
-      'approved_by_supervisor', 
-      'rejected_by_supervisor', 
-      'approved_final', 
-      'rejected_final'
+      'pending_librarian', 
+      'rejected', 
+      'completed'
     ], 
     default: 'pending_supervisor' 
   },
   reject_reason: { type: String },
   approved_at: { type: Date },
-  final_decision_at: { type: Date }
+  final_decision_at: { type: Date },
+  doc_report_url: { type: String },
+  doc_report_key: { type: String },
+  ai_report_url: { type: String },
+  ai_report_key: { type: String }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Submission', SubmissionSchema);

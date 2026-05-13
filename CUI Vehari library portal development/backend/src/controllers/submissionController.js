@@ -114,7 +114,7 @@ exports.approveBySupervisor = async (req, res) => {
       return res.status(404).json({ error: 'Document not found or not in pending status' });
     }
 
-    sub.status = 'approved_by_supervisor';
+    sub.status = 'pending_librarian';
     sub.approved_at = new Date();
     await sub.save();
 
@@ -137,7 +137,7 @@ exports.rejectBySupervisor = async (req, res) => {
       return res.status(404).json({ error: 'Document not found or not in pending status' });
     }
 
-    sub.status = 'rejected_by_supervisor';
+    sub.status = 'rejected';
     sub.reject_reason = req.body.reason || 'Rejected by supervisor';
     await sub.save();
 
@@ -152,7 +152,7 @@ exports.rejectBySupervisor = async (req, res) => {
 // GET /api/documents/librarian/pending
 exports.getLibrarianPending = async (req, res) => {
   try {
-    const subs = await Submission.find({ status: 'approved_by_supervisor' })
+    const subs = await Submission.find({ status: 'pending_librarian' })
       .populate('uploadedBy', 'name reg_number department')
       .populate('supervisorId', 'name')
       .sort('-createdAt')
@@ -172,14 +172,14 @@ exports.approveFinal = async (req, res) => {
   try {
     const sub = await Submission.findOne({ 
       _id: req.params.id, 
-      status: 'approved_by_supervisor' 
+      status: 'pending_librarian' 
     });
 
     if (!sub) {
       return res.status(404).json({ error: 'Document not found or not approved by supervisor' });
     }
 
-    sub.status = 'approved_final';
+    sub.status = 'completed';
     sub.librarianId = req.user._id;
     sub.final_decision_at = new Date();
     await sub.save();
@@ -195,14 +195,14 @@ exports.rejectFinal = async (req, res) => {
   try {
     const sub = await Submission.findOne({ 
       _id: req.params.id, 
-      status: 'approved_by_supervisor' 
+      status: 'pending_librarian' 
     });
 
     if (!sub) {
       return res.status(404).json({ error: 'Document not found or not approved by supervisor' });
     }
 
-    sub.status = 'rejected_final';
+    sub.status = 'rejected';
     sub.librarianId = req.user._id;
     sub.reject_reason = req.body.reason || 'Rejected by librarian';
     sub.final_decision_at = new Date();
@@ -211,6 +211,74 @@ exports.rejectFinal = async (req, res) => {
     res.status(200).json({ success: true, message: 'Final rejection issued' });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+// POST /api/documents/:id/upload-reports (Librarian only) - accepts both reports
+exports.uploadReports = async (req, res) => {
+  try {
+    const submissionId = req.params.id;
+    const { similarity_score, ai_percentage, plagiarism_notes, ai_notes } = req.body;
+    const plagiarismFile = req.files?.plagiarism_report?.[0];
+    const aiFile = req.files?.ai_report?.[0];
+    
+    if (!plagiarismFile && !aiFile) {
+      return res.status(400).json({ error: 'At least one report file is required' });
+    }
+    
+    const sub = await Submission.findById(submissionId);
+    if (!sub) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+    
+    // Upload Plagiarism Report if provided
+    if (plagiarismFile) {
+      const fileKey = await uploadToB2(plagiarismFile, `reports/${submissionId}`);
+      const fileUrl = `${process.env.B2_ENDPOINT}/${process.env.B2_BUCKET_NAME}/${fileKey}`;
+      sub.doc_report_url = fileUrl;
+      sub.doc_report_key = fileKey;
+      
+      await Report.create({
+        submission_id: submissionId,
+        librarian_id: req.user._id,
+        report_type: 'plagiarism',
+        file_key: fileKey,
+        file_name: plagiarismFile.originalname,
+        similarity_score: similarity_score ? Number(similarity_score) : null,
+        notes: plagiarism_notes
+      });
+    }
+    
+    // Upload AI Detection Report if provided
+    if (aiFile) {
+      const fileKey = await uploadToB2(aiFile, `reports/${submissionId}`);
+      const fileUrl = `${process.env.B2_ENDPOINT}/${process.env.B2_BUCKET_NAME}/${fileKey}`;
+      sub.ai_report_url = fileUrl;
+      sub.ai_report_key = fileKey;
+      
+      await Report.create({
+        submission_id: submissionId,
+        librarian_id: req.user._id,
+        report_type: 'ai',
+        file_key: fileKey,
+        file_name: aiFile.originalname,
+        ai_percentage: ai_percentage ? Number(ai_percentage) : null,
+        notes: ai_notes
+      });
+    }
+    
+    // If both reports are uploaded, mark as completed
+    if (sub.doc_report_url && sub.ai_report_url) {
+      sub.status = 'completed';
+      sub.librarianId = req.user._id;
+      sub.final_decision_at = new Date();
+    }
+    
+    await sub.save();
+    res.status(201).json({ success: true, message: 'Reports uploaded successfully', submission: sub });
+  } catch (err) {
+    console.error('Reports Upload Error:', err);
+    res.status(500).json({ error: `Reports upload failed: ${err.message}` });
   }
 };
 
@@ -228,9 +296,9 @@ exports.getAllSubmissions = async (req, res) => {
 
     const stats = {
       total: subs.length,
-      approved: subs.filter(s => s.status === 'approved_final').length,
-      rejected: subs.filter(s => s.status === 'rejected_final' || s.status === 'rejected_by_supervisor').length,
-      pending: subs.filter(s => s.status === 'pending_supervisor' || s.status === 'approved_by_supervisor').length,
+      completed: subs.filter(s => s.status === 'completed').length,
+      rejected: subs.filter(s => s.status === 'rejected').length,
+      pending: subs.filter(s => ['pending_supervisor', 'pending_librarian'].includes(s.status)).length,
     };
 
     res.status(200).json({ 
@@ -285,6 +353,18 @@ exports.adminDeleteFile = async (req, res) => {
         Bucket: process.env.B2_BUCKET_NAME,
         Key: sub.file_key,
       }));
+      if (sub.doc_report_key) {
+        await s3.send(new DeleteObjectCommand({
+          Bucket: process.env.B2_BUCKET_NAME,
+          Key: sub.doc_report_key,
+        }));
+      }
+      if (sub.ai_report_key) {
+        await s3.send(new DeleteObjectCommand({
+          Bucket: process.env.B2_BUCKET_NAME,
+          Key: sub.ai_report_key,
+        }));
+      }
     } catch (err) {
       console.warn('Storage deletion failed:', err.message);
     }
@@ -296,7 +376,7 @@ exports.adminDeleteFile = async (req, res) => {
   }
 };
 
-// POST /api/documents/:id/upload-report (Librarian only)
+// POST /api/documents/:id/upload-report (Librarian only) - keep for backward compatibility
 exports.uploadReport = async (req, res) => {
   try {
     const submissionId = req.params.id;

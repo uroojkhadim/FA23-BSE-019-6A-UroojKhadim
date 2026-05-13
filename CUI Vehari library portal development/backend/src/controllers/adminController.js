@@ -7,14 +7,20 @@ exports.getUsers = async (req, res) => {
   try {
     let query = {};
     
+    // Check for role filter from query params
+    if (req.query.role && req.query.role !== 'all') {
+      query.role = req.query.role;
+    }
+    
     // If user is subadmin, only show students from their department
     if (req.user.role === 'subadmin' && req.user.department) {
-      query = { department: req.user.department };
+      query.department = req.user.department;
     }
     
     const users = await User.find(query).sort({ createdAt: -1 }).select('-password_hash');
     res.status(200).json({ users });
   } catch (err) {
+    console.error('getUsers Error:', err);
     res.status(500).json({ error: err.message });
   }
 };

@@ -176,26 +176,23 @@ function Overview({ documents, loading, onUpload }) {
   const getStepStatus = (step) => {
     if (!latest) return { status: 'Locked', color: 'text-on-surface-variant/30', bg: 'bg-surface-container-low', icon: 'lock' }
     
-    const workflow = ['pending_supervisor', 'approved_by_supervisor', 'approved_final']
+    const workflow = ['pending_supervisor', 'pending_librarian', 'completed']
     const currentIdx = workflow.indexOf(latest.status)
     const stepIdx = workflow.indexOf(step)
 
     // Handle rejections
-    if (latest.status === 'rejected_by_supervisor' && step === 'approved_by_supervisor') {
-      return { status: 'Rejected', color: 'text-red-600', bg: 'bg-red-50', icon: 'cancel' }
-    }
-    if (latest.status === 'rejected_final' && step === 'approved_final') {
+    if (latest.status === 'rejected' && (step === 'pending_librarian' || step === 'pending_supervisor')) {
       return { status: 'Rejected', color: 'text-red-600', bg: 'bg-red-50', icon: 'cancel' }
     }
 
-    if (stepIdx < currentIdx || latest.status === 'approved_final') {
+    if (stepIdx < currentIdx || latest.status === 'completed') {
       return { status: 'Completed', color: 'text-green-600', bg: 'bg-green-50', icon: 'check_circle' }
     }
-    if (stepIdx === currentIdx || (latest.status.startsWith('rejected') && stepIdx === workflow.indexOf(latest.status.replace('rejected', 'approved')))) {
-      return { status: latest.status.includes('pending') ? 'In Progress' : (latest.status.includes('rejected') ? 'Rejected' : 'Completed'), 
-               color: latest.status.includes('pending') ? 'text-amber-600' : (latest.status.includes('rejected') ? 'text-red-600' : 'text-green-600'),
-               bg: latest.status.includes('pending') ? 'bg-amber-50' : (latest.status.includes('rejected') ? 'bg-red-50' : 'bg-green-50'),
-               icon: latest.status.includes('pending') ? 'pending' : (latest.status.includes('rejected') ? 'cancel' : 'check_circle'),
+    if (stepIdx === currentIdx || (latest.status === 'rejected' && stepIdx === 0)) {
+      return { status: latest.status === 'rejected' ? 'Rejected' : (latest.status.includes('pending') ? 'In Progress' : 'Completed'), 
+               color: latest.status === 'rejected' ? 'text-red-600' : (latest.status.includes('pending') ? 'text-amber-600' : 'text-green-600'),
+               bg: latest.status === 'rejected' ? 'bg-red-50' : (latest.status.includes('pending') ? 'bg-amber-50' : 'bg-green-50'),
+               icon: latest.status === 'rejected' ? 'cancel' : (latest.status.includes('pending') ? 'pending' : 'check_circle'),
                active: latest.status.includes('pending') }
     }
     return { status: 'Locked', color: 'text-on-surface-variant/30', bg: 'bg-surface-container-low', icon: 'lock' }
@@ -230,9 +227,9 @@ function Overview({ documents, loading, onUpload }) {
             <div className="p-6 bg-surface-container-low rounded-2xl border border-outline-variant/10">
               <p className="text-xs text-on-surface-variant leading-relaxed">
                 {latest.status === 'pending_supervisor' && "Your document is currently being reviewed by your assigned supervisor."}
-                {latest.status === 'approved_by_supervisor' && "Supervisor has approved your document. It is now with the Librarian for final decision."}
-                {latest.status === 'approved_final' && "Your document has received final approval from the Librarian. Workflow complete."}
-                {latest.status.startsWith('rejected') && `Your submission was rejected. Reason: ${latest.reject_reason || 'No reason provided.'}`}
+                {latest.status === 'pending_librarian' && "Supervisor has approved your document. It is now with the Librarian for final decision."}
+                {latest.status === 'completed' && "Your document has received final approval from the Librarian. Workflow complete."}
+                {latest.status === 'rejected' && `Your submission was rejected. Reason: ${latest.reject_reason || 'No reason provided.'}`}
               </p>
             </div>
           </div>
@@ -241,8 +238,8 @@ function Overview({ documents, loading, onUpload }) {
             <div className="absolute left-[15px] top-4 bottom-4 w-[2px] border-l-2 border-dashed border-outline-variant/30" />
             
             <Step {...getStepStatus('pending_supervisor')} title="Supervisor Review" />
-            <Step {...getStepStatus('approved_by_supervisor')} title="Librarian Review" />
-            <Step {...getStepStatus('approved_final')} title="Final Approval" />
+            <Step {...getStepStatus('pending_librarian')} title="Librarian Review" />
+            <Step {...getStepStatus('completed')} title="Final Approval" />
           </div>
         </div>
       )}

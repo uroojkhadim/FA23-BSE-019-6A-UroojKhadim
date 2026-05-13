@@ -73,6 +73,10 @@ export const api = {
     method: 'POST',
     body: formData
   }),
+  uploadReports: (id, formData) => apiFetch(`/api/documents/${id}/upload-reports`, {
+    method: 'POST',
+    body: formData
+  }),
 
   // Admin
   getAllDocuments: () => apiFetch('/api/documents/all'),

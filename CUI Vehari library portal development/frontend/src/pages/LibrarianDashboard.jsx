@@ -116,12 +116,9 @@ export default function LibrarianDashboard() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [pRes, aRes] = await Promise.all([
-        api.getLibrarianPending(),
-        api.getAllDocuments()
-      ])
+      const pRes = await api.getLibrarianPending()
       setDocuments(pRes.documents || [])
-      setAllDocs(aRes.documents || [])
+      setAllDocs([]) // For Librarian, we don't need all docs
     } catch (e) { console.error(e) }
     setLoading(false)
   }
@@ -154,23 +151,15 @@ export default function LibrarianDashboard() {
     if (!selectedSubmission || (!plagiarismFile && !aiFile)) return
     
     try {
-      if (plagiarismFile) {
-        const formData = new FormData()
-        formData.append('file', plagiarismFile)
-        formData.append('report_type', 'plagiarism')
-        if (reportData.similarity_score) formData.append('similarity_score', reportData.similarity_score)
-        if (reportData.plagiarism_notes) formData.append('notes', reportData.plagiarism_notes)
-        await api.uploadReport(selectedSubmission._id, formData)
-      }
+      const formData = new FormData()
+      if (plagiarismFile) formData.append('plagiarism_report', plagiarismFile)
+      if (aiFile) formData.append('ai_report', aiFile)
+      if (reportData.similarity_score) formData.append('similarity_score', reportData.similarity_score)
+      if (reportData.ai_percentage) formData.append('ai_percentage', reportData.ai_percentage)
+      if (reportData.plagiarism_notes) formData.append('plagiarism_notes', reportData.plagiarism_notes)
+      if (reportData.ai_notes) formData.append('ai_notes', reportData.ai_notes)
       
-      if (aiFile) {
-        const formData = new FormData()
-        formData.append('file', aiFile)
-        formData.append('report_type', 'ai')
-        if (reportData.ai_percentage) formData.append('ai_percentage', reportData.ai_percentage)
-        if (reportData.ai_notes) formData.append('notes', reportData.ai_notes)
-        await api.uploadReport(selectedSubmission._id, formData)
-      }
+      await api.uploadReports(selectedSubmission._id, formData)
       
       toast.success('Reports uploaded successfully!')
       setReportModalOpen(false)

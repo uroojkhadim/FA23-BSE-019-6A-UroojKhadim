@@ -181,7 +181,7 @@ function OverviewTab() {
   const stats = data.stats;
   const statCards = [
     { label: 'Total Uploads', value: stats.total, icon: 'upload_file', color: 'text-blue-600' },
-    { label: 'Approved Final', value: stats.approved, icon: 'verified', color: 'text-green-600' },
+    { label: 'Completed', value: stats.completed, icon: 'verified', color: 'text-green-600' },
     { label: 'Rejected', value: stats.rejected, icon: 'cancel', color: 'text-red-600' },
     { label: 'Pending Review', value: stats.pending, icon: 'pending', color: 'text-amber-600' },
   ]
@@ -219,8 +219,8 @@ function OverviewTab() {
                   <td className="py-4 text-xs text-on-surface-variant">{doc.uploadedBy?.name}</td>
                   <td className="py-4">
                     <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest ${
-                      doc.status.includes('approved') ? 'bg-green-50 text-green-600' :
-                      doc.status.includes('rejected') ? 'bg-red-50 text-red-600' :
+                      doc.status === 'completed' ? 'bg-green-50 text-green-600' :
+                      doc.status === 'rejected' ? 'bg-red-50 text-red-600' :
                       'bg-amber-50 text-amber-600'
                     }`}>
                       {doc.status.replace(/_/g, ' ')}
@@ -722,8 +722,8 @@ function FilesTab() {
                   </td>
                   <td className="px-8 py-6">
                     <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${
-                      f.status.includes('approved') ? 'bg-green-50 text-green-600' :
-                      f.status.includes('rejected') ? 'bg-red-50 text-red-600' :
+                      f.status === 'completed' ? 'bg-green-50 text-green-600' :
+                      f.status === 'rejected' ? 'bg-red-50 text-red-600' :
                       'bg-amber-50 text-amber-600'
                     }`}>
                       {f.status.replace(/_/g, ' ')}

@@ -13,6 +13,7 @@ const {
   getDownloadUrl,
   adminDeleteFile,
   uploadReport,
+  uploadReports,
   getReports,
   getReportDownloadUrl
 } = require('../controllers/submissionController');
@@ -55,6 +56,17 @@ const reportUpload = multer({
   },
 });
 
+const reportsUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!reportAllowedMimes.has(file.mimetype)) {
+      return cb(new Error('Invalid file type for report. Only PDF, DOC, DOCX, and TXT are allowed.'));
+    }
+    return cb(null, true);
+  },
+});
+
 // Student
 router.post('/upload', protect, authorize('student'), upload.single('file'), createSubmissionRecord);
 router.get('/my', protect, authorize('student'), getMySubmissions);
@@ -69,6 +81,10 @@ router.get('/librarian/pending', protect, authorize('librarian'), getLibrarianPe
 router.put('/:id/approve-final', protect, authorize('librarian'), approveFinal);
 router.put('/:id/reject-final', protect, authorize('librarian'), rejectFinal);
 router.post('/:id/upload-report', protect, authorize('librarian'), reportUpload.single('file'), uploadReport);
+router.post('/:id/upload-reports', protect, authorize('librarian'), reportsUpload.fields([
+  { name: 'plagiarism_report', maxCount: 1 },
+  { name: 'ai_report', maxCount: 1 }
+]), uploadReports);
 
 // Admin
 router.get('/all', protect, authorize('admin', 'subadmin'), getAllSubmissions);
