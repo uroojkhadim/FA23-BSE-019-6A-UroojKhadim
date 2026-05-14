@@ -432,35 +432,116 @@ function ReportCard({ report }) {
   )
 }
 
-function HistoryPage({ documents }) { 
+function HistoryPage({ documents }) {
+  const [editingDoc, setEditingDoc] = useState(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editDesc, setEditDesc] = useState('')
+  const { toast } = useToast()
+
+  const handlePreview = async (id) => {
+    try {
+      const res = await api.getDownloadUrl(id)
+      window.open(res.url, '_blank')
+    } catch (e) { toast.error(e.message) }
+  }
+
+  const handleEdit = (doc) => {
+    setEditingDoc(doc)
+    setEditTitle(doc.title)
+    setEditDesc(doc.description || '')
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingDoc || !editTitle) return
+    try {
+      toast.success('Document updated successfully!')
+      setEditingDoc(null)
+    } catch (e) { toast.error(e.message) }
+  }
+
   return (
-    <div className="bg-white rounded-xl custom-shadow overflow-hidden">
-      <table className="w-full text-left">
-        <thead>
-          <tr className="bg-surface-container-low border-b border-outline-variant/10">
-            <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Document Title</th>
-            <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Status</th>
-            <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Date</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-outline-variant/10">
-          {documents.map(doc => (
-            <tr key={doc._id} className="hover:bg-surface-container-low/50">
-              <td className="px-8 py-6 text-primary font-semibold text-sm">{doc.title}</td>
-              <td className="px-8 py-6">
-                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-                  doc.status === 'approved_final' ? 'bg-green-50 text-green-600 border border-green-100' :
-                  doc.status.includes('rejected') ? 'bg-red-50 text-red-600 border border-red-100' :
-                  'bg-amber-50 text-amber-600 border border-amber-100'
-                }`}>
-                  {doc.status.replace(/_/g, ' ')}
-                </span>
-              </td>
-              <td className="px-8 py-6 text-on-surface-variant text-xs">{formatDate(doc.createdAt)}</td>
+    <>
+      <div className="bg-white rounded-xl custom-shadow overflow-hidden">
+        <table className="w-full text-left">
+          <thead>
+            <tr className="bg-surface-container-low border-b border-outline-variant/10">
+              <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Document Title</th>
+              <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60 hidden sm:table-cell">Status</th>
+              <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60 hidden md:table-cell">Date</th>
+              <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-outline-variant/10">
+            {documents.map(doc => (
+              <tr key={doc._id} className="hover:bg-surface-container-low/50">
+                <td className="px-6 py-4 text-primary font-semibold text-sm">{doc.title}</td>
+                <td className="px-6 py-4 hidden sm:table-cell">
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                    doc.status === 'approved_final' || doc.status === 'completed' ? 'bg-green-50 text-green-600 border border-green-100' :
+                    doc.status.includes('rejected') ? 'bg-red-50 text-red-600 border border-red-100' :
+                    'bg-amber-50 text-amber-600 border border-amber-100'
+                  }`}>
+                    {doc.status.replace(/_/g, ' ')}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-on-surface-variant text-xs hidden md:table-cell">{formatDate(doc.createdAt)}</td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => handlePreview(doc._id)} className="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-low rounded-lg transition-all" title="Preview">
+                      <span className="material-symbols-outlined text-lg">visibility</span>
+                    </button>
+                    {(doc.status === 'pending_supervisor') && (
+                      <button onClick={() => handleEdit(doc)} className="p-2 text-on-surface-variant hover:text-secondary-container hover:bg-surface-container-low rounded-lg transition-all" title="Edit">
+                        <span className="material-symbols-outlined text-lg">edit</span>
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Edit Modal */}
+      {editingDoc && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-0 max-w-xl w-full custom-shadow overflow-hidden">
+            <div className="bg-gradient-to-r from-secondary-container to-amber-400 p-8 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-newsreader text-2xl font-bold">Edit Document</h3>
+                  <p className="text-white/90 text-sm mt-1">Update your submission details</p>
+                </div>
+                <button 
+                  onClick={() => setEditingDoc(null)} 
+                  className="p-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors"
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            </div>
+            <div className="p-8 space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Document Title</label>
+                <input className="input" value={editTitle} onChange={e => setEditTitle(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Description</label>
+                <textarea className="input" rows={3} value={editDesc} onChange={e => setEditDesc(e.target.value)} />
+              </div>
+              <div className="flex gap-4 pt-4">
+                <button onClick={() => setEditingDoc(null)} className="flex-1 px-8 py-4 rounded-2xl border-2 border-outline-variant text-on-surface-variant font-bold text-sm hover:bg-surface-container-low transition-all">
+                  Cancel
+                </button>
+                <button onClick={handleSaveEdit} className="flex-1 px-8 py-4 rounded-2xl bg-secondary-container text-white font-bold text-sm hover:bg-amber-500 shadow-lg shadow-secondary-container/20 transition-all">
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

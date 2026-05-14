@@ -181,7 +181,7 @@ function Overview({ pending, all, loading, onAction, onPreview }) {
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map(stat => (
           <div key={stat.label} className="bg-white rounded-xl custom-shadow p-6 flex flex-col items-center text-center transition-transform hover:-translate-y-1">
             <div className={`w-12 h-12 rounded-full bg-surface-container-low ${stat.color} flex items-center justify-center mb-4`}>
@@ -202,25 +202,27 @@ function Overview({ pending, all, loading, onAction, onPreview }) {
         ) : pending.length > 0 ? (
           <div className="space-y-3">
             {pending.slice(0, 3).map(s => (
-              <div key={s._id} className="bg-white rounded-xl custom-shadow px-8 py-5 flex items-center justify-between border-l-4 border-amber-400">
-                <div className="flex items-center gap-5">
-                  <div className="w-12 h-12 bg-primary-container text-white rounded-full flex items-center justify-center font-newsreader font-bold">
+              <div key={s._id} className="bg-white rounded-xl custom-shadow p-6 flex flex-col lg:flex-row items-start lg:items-center justify-between border-l-4 border-amber-400 gap-4">
+                <div className="flex items-center gap-5 flex-1 min-w-0">
+                  <div className="w-12 h-12 bg-primary-container text-white rounded-full flex items-center justify-center font-newsreader font-bold flex-shrink-0">
                     {s.uploadedBy?.name?.[0]}
                   </div>
-                  <div>
-                    <h4 className="text-primary font-bold">{s.uploadedBy?.name}</h4>
-                    <p className="text-on-surface-variant text-sm font-medium">{s.title}</p>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-primary font-bold truncate">{s.uploadedBy?.name}</h4>
+                    <p className="text-on-surface-variant text-sm font-medium truncate">{s.title}</p>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/40">Submitted {formatDate(s.createdAt)}</span>
-                  <button onClick={() => onPreview(s._id)} className="text-xs text-primary font-bold hover:underline flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">visibility</span> Preview
-                  </button>
-                </div>
-                <div className="flex gap-3">
-                  <button onClick={() => onAction(s._id, 'approve')} className="bg-green-50 text-green-700 px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-green-100 transition-all">Approve</button>
-                  <button onClick={() => onAction(s._id, 'reject')} className="bg-red-50 text-red-700 px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-red-100 transition-all">Reject</button>
+                <div className="flex flex-col lg:flex-row items-start lg:items-center gap-3 w-full lg:w-auto">
+                  <div className="flex flex-col items-start lg:items-end gap-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/40">Submitted {formatDate(s.createdAt)}</span>
+                    <button onClick={() => onPreview(s._id)} className="text-xs text-primary font-bold hover:underline flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">visibility</span> Preview
+                    </button>
+                  </div>
+                  <div className="flex gap-3 w-full lg:w-auto">
+                    <button onClick={() => onAction(s._id, 'approve')} className="flex-1 lg:flex-none bg-green-50 text-green-700 px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-green-100 transition-all">Approve</button>
+                    <button onClick={() => onAction(s._id, 'reject')} className="flex-1 lg:flex-none bg-red-50 text-red-700 px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-red-100 transition-all">Reject</button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -239,24 +241,26 @@ function PendingPage({ documents, onAction, onPreview, loading }) {
   return (
     <div className="space-y-6">
       {documents.map(s => (
-        <div key={s._id} className="bg-white rounded-xl custom-shadow px-8 py-6 flex items-center justify-between border-l-4 border-amber-400">
-          <div className="flex items-center gap-6">
-            <div className="w-12 h-12 bg-primary-container text-white rounded-full flex items-center justify-center font-newsreader font-bold">
+        <div key={s._id} className="bg-white rounded-xl custom-shadow p-6 flex flex-col md:flex-row items-start md:items-center justify-between border-l-4 border-amber-400 gap-4">
+          <div className="flex items-center gap-6 flex-1 min-w-0">
+            <div className="w-12 h-12 bg-primary-container text-white rounded-full flex items-center justify-center font-newsreader font-bold flex-shrink-0">
               {s.uploadedBy?.name?.[0]}
             </div>
-            <div>
-              <h4 className="text-primary font-bold text-lg">{s.uploadedBy?.name}</h4>
-              <p className="text-on-surface-variant text-sm font-medium mb-1">{s.title}</p>
-              <div className="flex items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <h4 className="text-primary font-bold text-lg truncate">{s.uploadedBy?.name}</h4>
+              <p className="text-on-surface-variant text-sm font-medium mb-1 truncate">{s.title}</p>
+              <div className="flex flex-wrap items-center gap-3">
                 <span className="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest">Submitted {formatDate(s.createdAt)}</span>
-                <span className="w-1 h-1 bg-outline-variant rounded-full" />
-                <button onClick={() => onPreview(s._id)} className="text-xs text-primary font-bold hover:underline">View File</button>
+                <span className="w-1 h-1 bg-outline-variant rounded-full hidden sm:inline" />
+                <button onClick={() => onPreview(s._id)} className="text-xs text-primary font-bold hover:underline inline-flex items-center gap-1">
+                  <span className="material-symbols-outlined text-sm">visibility</span> Preview File
+                </button>
               </div>
             </div>
           </div>
-          <div className="flex gap-4">
-            <button onClick={() => onAction(s._id, 'approve')} className="bg-green-50 text-green-700 px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-green-100 transition-all shadow-sm">Approve</button>
-            <button onClick={() => onAction(s._id, 'reject')} className="bg-red-50 text-red-700 px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-red-100 transition-all shadow-sm">Reject</button>
+          <div className="flex gap-3 w-full md:w-auto">
+            <button onClick={() => onAction(s._id, 'approve')} className="flex-1 md:flex-none bg-green-50 text-green-700 px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-green-100 transition-all shadow-sm">Approve</button>
+            <button onClick={() => onAction(s._id, 'reject')} className="flex-1 md:flex-none bg-red-50 text-red-700 px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-red-100 transition-all shadow-sm">Reject</button>
           </div>
         </div>
       ))}

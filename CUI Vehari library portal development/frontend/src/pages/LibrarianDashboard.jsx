@@ -442,30 +442,41 @@ function QueuePage({ documents, onAction, onDownload, onUploadReport }) {
       ) : (
         <div className="space-y-4">
           {documents.map(s => (
-            <div key={s._id} className="bg-white rounded-xl custom-shadow px-8 py-6 flex items-center justify-between border-l-4 border-secondary-container">
+            <div key={s._id} className="bg-white rounded-xl custom-shadow p-6 flex flex-col lg:flex-row items-start lg:items-center justify-between border-l-4 border-secondary-container gap-4">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-4 mb-2">
+                <div className="flex flex-wrap items-center gap-3 mb-2">
                   <h4 className="text-primary font-bold text-lg truncate">{s.title}</h4>
                   <span className="inline-flex px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-amber-50 text-amber-600 border border-amber-100">Pending Final Review</span>
                 </div>
-                <div className="flex items-center gap-6 text-[11px] font-medium text-on-surface-variant/60 uppercase tracking-wider">
-                  <span>Student: {s.uploadedBy?.name}</span>
-                  <span>Supervisor: {s.supervisorId?.name}</span>
-                  <span>Dept: {s.uploadedBy?.department}</span>
+                <div className="flex flex-wrap items-center gap-4 text-[11px] font-medium text-on-surface-variant/60 uppercase tracking-wider">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="material-symbols-outlined text-xs">person</span>
+                    Student: {s.uploadedBy?.name}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <span className="material-symbols-outlined text-xs">supervisor_account</span>
+                    Supervisor: {s.supervisorId?.name}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <span className="material-symbols-outlined text-xs">apartment</span>
+                    Dept: {s.uploadedBy?.department}
+                  </span>
                 </div>
               </div>
-              <div className="flex gap-3">
-                <button onClick={() => onDownload(s._id)} className="p-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-low rounded-xl transition-all" title="Download Document">
-                  <span className="material-symbols-outlined">download</span>
-                </button>
-                <button onClick={() => onUploadReport(s)} className="p-3 text-on-surface-variant hover:text-secondary-container hover:bg-surface-container-low rounded-xl transition-all" title="Upload Report">
-                  <span className="material-symbols-outlined">upload_file</span>
-                </button>
-                <div className="flex gap-2">
-                  <button onClick={() => onAction(s._id, 'approve')} className="bg-green-50 text-green-700 px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-green-100 transition-all">
+              <div className="flex flex-wrap gap-3 w-full lg:w-auto">
+                <div className="flex gap-2 w-full lg:w-auto">
+                  <button onClick={() => onDownload(s._id)} className="flex-1 lg:flex-none p-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-low rounded-xl transition-all" title="Download Document">
+                    <span className="material-symbols-outlined">download</span>
+                  </button>
+                  <button onClick={() => onUploadReport(s)} className="flex-1 lg:flex-none p-3 text-on-surface-variant hover:text-secondary-container hover:bg-surface-container-low rounded-xl transition-all" title="Upload Report">
+                    <span className="material-symbols-outlined">upload_file</span>
+                  </button>
+                </div>
+                <div className="flex gap-2 w-full lg:w-auto">
+                  <button onClick={() => onAction(s._id, 'approve')} className="flex-1 lg:flex-none bg-green-50 text-green-700 px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-green-100 transition-all">
                     Approve
                   </button>
-                  <button onClick={() => onAction(s._id, 'reject')} className="bg-red-50 text-red-700 px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-red-100 transition-all">
+                  <button onClick={() => onAction(s._id, 'reject')} className="flex-1 lg:flex-none bg-red-50 text-red-700 px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-red-100 transition-all">
                     Reject
                   </button>
                 </div>
@@ -480,25 +491,25 @@ function QueuePage({ documents, onAction, onDownload, onUploadReport }) {
 
 function CompletedPage({ documents }) {
   return (
-    <div className="bg-white rounded-xl custom-shadow overflow-hidden">
-      <table className="w-full text-left">
+    <div className="bg-white rounded-xl custom-shadow overflow-hidden overflow-x-auto">
+      <table className="w-full text-left min-w-[600px]">
         <thead>
           <tr className="bg-surface-container-low border-b border-outline-variant/10">
-            <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Submission Title</th>
-            <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Student</th>
-            <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Final Date</th>
-            <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Status</th>
+            <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Submission Title</th>
+            <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60 hidden sm:table-cell">Student</th>
+            <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60 hidden md:table-cell">Final Date</th>
+            <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Status</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-outline-variant/10">
           {documents.map(s => (
             <tr key={s._id} className="hover:bg-surface-container-low/50">
-              <td className="px-8 py-6 text-primary font-semibold text-sm">{s.title}</td>
-              <td className="px-8 py-6 text-on-surface-variant text-xs">{s.uploadedBy?.name}</td>
-              <td className="px-8 py-6 text-on-surface-variant text-xs">{formatDate(s.final_decision_at || s.updatedAt)}</td>
-              <td className="px-8 py-6">
+              <td className="px-6 py-4 text-primary font-semibold text-sm">{s.title}</td>
+              <td className="px-6 py-4 text-on-surface-variant text-xs hidden sm:table-cell">{s.uploadedBy?.name}</td>
+              <td className="px-6 py-4 text-on-surface-variant text-xs hidden md:table-cell">{formatDate(s.final_decision_at || s.updatedAt)}</td>
+              <td className="px-6 py-4">
                  <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${
-                   s.status === 'approved_final' ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-red-50 text-red-600 border border-red-100'
+                   s.status === 'approved_final' || s.status === 'completed' ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-red-50 text-red-600 border border-red-100'
                  }`}>
                    {s.status.replace(/_/g, ' ')}
                  </span>
