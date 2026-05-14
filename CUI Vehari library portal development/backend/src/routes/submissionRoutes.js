@@ -4,6 +4,8 @@ const {
   createSubmissionRecord,
   getMySubmissions,
   getSupervisorPending,
+  getSupervisorAll,
+  getSupervisorStudents,
   approveBySupervisor,
   rejectBySupervisor,
   getLibrarianPending,
@@ -73,6 +75,8 @@ router.get('/my', protect, authorize('student'), getMySubmissions);
 
 // Supervisor
 router.get('/supervisor/pending', protect, authorize('supervisor'), getSupervisorPending);
+router.get('/supervisor/all', protect, authorize('supervisor'), getSupervisorAll);
+router.get('/supervisor/students', protect, authorize('supervisor'), getSupervisorStudents);
 router.put('/:id/approve-supervisor', protect, authorize('supervisor'), approveBySupervisor);
 router.put('/:id/reject-supervisor', protect, authorize('supervisor'), rejectBySupervisor);
 

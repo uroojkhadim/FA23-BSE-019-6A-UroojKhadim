@@ -105,6 +105,7 @@ export default function SupervisorDashboard() {
   const { user } = useAuth()
   const [pending, setPending] = useState([])
   const [all, setAll] = useState([])
+  const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const location = useLocation()
   const { toast } = useToast()
@@ -112,10 +113,14 @@ export default function SupervisorDashboard() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const pRes = await api.getSupervisorPending()
+      const [pRes, allRes, studentsRes] = await Promise.all([
+        api.getSupervisorPending(),
+        api.getSupervisorAll(),
+        api.getSupervisorStudents()
+      ])
       setPending(pRes.documents || [])
-      // Supervisors don't have "my documents" in this workflow
-      setAll([]) 
+      setAll(allRes.documents || []) 
+      setStudents(studentsRes.students || [])
     } catch (e) { console.error(e) }
     setLoading(false)
   }
@@ -162,7 +167,7 @@ export default function SupervisorDashboard() {
           <Routes>
             <Route path="/" element={<Overview pending={pending} all={all} loading={loading} onAction={handleAction} onPreview={handlePreview} />} />
             <Route path="pending" element={<PendingPage documents={pending} onAction={handleAction} onPreview={handlePreview} loading={loading} />} />
-            <Route path="students" element={<StudentsPage all={all} loading={loading} />} />
+            <Route path="students" element={<StudentsPage students={students} loading={loading} />} />
             <Route path="history" element={<HistoryPage all={all} loading={loading} />} />
           </Routes>
         </main>
@@ -275,6 +280,115 @@ function PendingPage({ documents, onAction, onPreview, loading }) {
   )
 }
 
-function StudentsPage() { return <div className="p-12 text-center text-on-surface-variant italic">Faculty student management module loading...</div> }
-function HistoryPage() { return <div className="p-12 text-center text-on-surface-variant italic">Academic history records loading...</div> }
+function StudentsPage({ students, loading }) {
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[1,2,3].map(i => <div key={i} className="h-24 bg-white rounded-xl animate-pulse custom-shadow" />)}
+      </div>
+    )
+  }
+  
+  if (students.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl p-20 flex flex-col items-center text-center custom-shadow">
+        <span className="material-symbols-outlined text-[80px] text-outline-variant/30 mb-6">group</span>
+        <h3 className="font-newsreader text-2xl font-bold text-primary mb-2">No Students Assigned</h3>
+        <p className="text-on-surface-variant max-w-sm mx-auto">You don't have any students assigned to you yet.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {students.map(student => (
+        <div key={student.id} className="bg-white rounded-xl custom-shadow p-6 border-l-4 border-secondary-container">
+          <div className="flex items-start gap-4">
+            <div className="w-14 h-14 bg-secondary-container/20 text-secondary-container rounded-full flex items-center justify-center font-newsreader font-bold text-xl flex-shrink-0">
+              {student.name?.[0]}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-primary font-bold text-lg truncate">{student.name}</h4>
+              <p className="text-on-surface-variant text-xs mb-1">{student.reg_number}</p>
+              <p className="text-on-surface-variant text-xs mb-3">{student.department}</p>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-widest">
+                  <span className="material-symbols-outlined text-xs">description</span>
+                  {student.submission_count} Submissions
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function HistoryPage({ all, loading }) {
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl custom-shadow overflow-hidden">
+        <div className="h-16 bg-surface-container-low" />
+        <div className="space-y-1 p-8">
+          {[1,2,3].map(i => <div key={i} className="h-16 bg-surface-container-low/50 rounded-lg animate-pulse" />)}
+        </div>
+      </div>
+    )
+  }
+  
+  if (all.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl p-20 flex flex-col items-center text-center custom-shadow">
+        <span className="material-symbols-outlined text-[80px] text-outline-variant/30 mb-6">history</span>
+        <h3 className="font-newsreader text-2xl font-bold text-primary mb-2">No History Yet</h3>
+        <p className="text-on-surface-variant max-w-sm mx-auto">No submissions have been processed yet.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-white rounded-xl custom-shadow overflow-hidden overflow-x-auto">
+      <table className="w-full text-left min-w-[600px]">
+        <thead>
+          <tr className="bg-surface-container-low border-b border-outline-variant/10">
+            <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Student</th>
+            <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Document</th>
+            <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60 hidden md:table-cell">Date</th>
+            <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Status</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-outline-variant/10">
+          {all.map(doc => (
+            <tr key={doc._id} className="hover:bg-surface-container-low/50">
+              <td className="px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-secondary-container/20 text-secondary-container rounded-full flex items-center justify-center font-newsreader font-bold text-xs flex-shrink-0">
+                    {doc.uploadedBy?.name?.[0]}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-primary font-semibold text-sm truncate">{doc.uploadedBy?.name}</p>
+                    <p className="text-on-surface-variant text-[10px]">{doc.uploadedBy?.reg_number}</p>
+                  </div>
+                </div>
+              </td>
+              <td className="px-6 py-4 text-primary font-medium text-sm truncate max-w-[200px]">{doc.title}</td>
+              <td className="px-6 py-4 text-on-surface-variant text-xs hidden md:table-cell">{formatDate(doc.createdAt)}</td>
+              <td className="px-6 py-4">
+                <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${
+                  doc.status === 'completed' || doc.status === 'approved_final' ? 'bg-green-50 text-green-600 border border-green-100' :
+                  doc.status.includes('rejected') ? 'bg-red-50 text-red-600 border border-red-100' :
+                  doc.status === 'pending_librarian' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
+                  'bg-amber-50 text-amber-600 border border-amber-100'
+                }`}>
+                  {doc.status.replace(/_/g, ' ')}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
 

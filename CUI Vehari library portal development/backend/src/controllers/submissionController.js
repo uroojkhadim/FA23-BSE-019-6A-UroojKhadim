@@ -101,6 +101,54 @@ exports.getSupervisorPending = async (req, res) => {
   }
 };
 
+// GET /api/documents/supervisor/all - All submissions for this supervisor
+exports.getSupervisorAll = async (req, res) => {
+  try {
+    const subs = await Submission.find({ 
+      supervisorId: req.user._id
+    })
+      .populate('uploadedBy', 'name reg_number department')
+      .sort('-createdAt')
+      .lean();
+
+    res.status(200).json({ 
+      success: true, 
+      documents: subs.map(s => ({ ...s, id: s._id })) 
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// GET /api/documents/supervisor/students - All students assigned to this supervisor
+exports.getSupervisorStudents = async (req, res) => {
+  try {
+    const students = await User.find({ 
+      role: 'student',
+      supervisor_id: req.user._id
+    })
+      .select('name email reg_number department')
+      .sort('name')
+      .lean();
+
+    // Also get submissions for each student
+    const submissions = await Submission.find({ supervisorId: req.user._id });
+    
+    const studentsWithSubmissions = students.map(student => ({
+      ...student,
+      id: student._id,
+      submission_count: submissions.filter(sub => String(sub.uploadedBy) === String(student._id)).length
+    }));
+
+    res.status(200).json({ 
+      success: true, 
+      students: studentsWithSubmissions 
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // PUT /api/documents/:id/approve-supervisor
 exports.approveBySupervisor = async (req, res) => {
   try {

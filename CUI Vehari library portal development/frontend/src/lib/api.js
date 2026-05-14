@@ -56,6 +56,8 @@ export const api = {
 
   // Supervisor
   getSupervisorPending: () => apiFetch('/api/documents/supervisor/pending'),
+  getSupervisorAll: () => apiFetch('/api/documents/supervisor/all'),
+  getSupervisorStudents: () => apiFetch('/api/documents/supervisor/students'),
   approveBySupervisor: (id) => apiFetch(`/api/documents/${id}/approve-supervisor`, { method: 'PUT' }),
   rejectBySupervisor: (id, reason) => apiFetch(`/api/documents/${id}/reject-supervisor`, { 
     method: 'PUT', 
