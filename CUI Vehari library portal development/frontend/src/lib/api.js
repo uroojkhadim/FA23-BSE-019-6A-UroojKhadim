@@ -86,8 +86,14 @@ export const api = {
   
   // Auth/Admin Utils
   getUsers: (params) => {
-    const query = new URLSearchParams(params).toString();
-    return apiFetch(`/api/admin/users?${query}`);
+    const cleanParams = {};
+    for (const key in params) {
+      if (params[key] !== undefined && params[key] !== null) {
+        cleanParams[key] = params[key];
+      }
+    }
+    const query = new URLSearchParams(cleanParams).toString();
+    return apiFetch(`/api/admin/users${query ? '?' + query : ''}`);
   },
   addFaculty: (data) => apiFetch('/api/admin/users', { method: 'POST', body: JSON.stringify(data) }),
   createUser: (data) => apiFetch('/api/admin/users', { method: 'POST', body: JSON.stringify(data) }),

@@ -451,7 +451,7 @@ function QueuePage({ documents, onAction, onDownload, onUploadReport }) {
                 <div className="flex flex-wrap items-center gap-4 text-[11px] font-medium text-on-surface-variant/60 uppercase tracking-wider">
                   <span className="inline-flex items-center gap-1">
                     <span className="material-symbols-outlined text-xs">person</span>
-                    Student: {s.uploadedBy?.name}
+                    Student: {s.uploadedBy?.name} ({s.uploadedBy?.reg_number})
                   </span>
                   <span className="inline-flex items-center gap-1">
                     <span className="material-symbols-outlined text-xs">supervisor_account</span>
