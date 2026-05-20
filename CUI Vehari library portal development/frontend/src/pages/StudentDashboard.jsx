@@ -434,6 +434,8 @@ function ReportCard({ report }) {
 
 function HistoryPage({ documents }) {
   const [editingDoc, setEditingDoc] = useState(null)
+  const [previewDoc, setPreviewDoc] = useState(null)
+  const [previewUrl, setPreviewUrl] = useState(null)
   const [editTitle, setEditTitle] = useState('')
   const [editDesc, setEditDesc] = useState('')
   const { toast } = useToast()
@@ -441,7 +443,9 @@ function HistoryPage({ documents }) {
   const handlePreview = async (id) => {
     try {
       const res = await api.getDownloadUrl(id)
-      window.open(res.url, '_blank')
+      setPreviewUrl(res.url)
+      const doc = documents.find(d => d._id === id)
+      setPreviewDoc(doc)
     } catch (e) { toast.error(e.message) }
   }
 
@@ -502,6 +506,43 @@ function HistoryPage({ documents }) {
           </tbody>
         </table>
       </div>
+
+      {/* Preview Modal */}
+      {previewDoc && previewUrl && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-0 max-w-5xl w-full max-h-[90vh] custom-shadow overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-r from-secondary-container to-amber-400 p-6 text-white flex items-center justify-between">
+              <div>
+                <h3 className="font-newsreader text-xl font-bold">{previewDoc.title}</h3>
+                <p className="text-white/90 text-sm mt-1">Preview Document</p>
+              </div>
+              <button 
+                onClick={() => { setPreviewDoc(null); setPreviewUrl(null); }} 
+                className="p-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <iframe 
+                src={previewUrl} 
+                className="w-full h-full border-0"
+                title="Document Preview"
+              />
+            </div>
+            <div className="p-4 border-t border-outline-variant/10 flex justify-end">
+              <a 
+                href={previewUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="px-6 py-2 bg-secondary-container text-white rounded-xl text-sm font-bold hover:bg-amber-500 transition-all"
+              >
+                Download
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit Modal */}
       {editingDoc && (
