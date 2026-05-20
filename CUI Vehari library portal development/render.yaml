@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: cui-vehari-library-backend
+    env: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        fromDatabase:
+          name: cui-vehari-mongo
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: B2_KEY_ID
+        sync: false
+      - key: B2_APPLICATION_KEY
+        sync: false
+      - key: B2_BUCKET_ID
+        sync: false
+      - key: B2_BUCKET_NAME
+        sync: false
+
+databases:
+  - name: cui-vehari-mongo
+    databaseName: cui_plagiarism_portal
+    user: cui_user
+    plan: free
