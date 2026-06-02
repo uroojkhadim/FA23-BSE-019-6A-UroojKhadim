@@ -1,0 +1,110 @@
+@use '@angular/material' as mat;
+
+html {
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$green-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+
+:root {
+  --dh-primary: #1565c0;
+  --dh-primary-light: #42a5f5;
+  --dh-accent: #2e7d32;
+  --dh-accent-light: #66bb6a;
+  --dh-bg: #f5f9fc;
+  --dh-surface: #ffffff;
+  --dh-text: #1a2b3c;
+  --dh-muted: #5c6b7a;
+  --dh-border: #e3edf5;
+  --dh-shadow: 0 4px 24px rgba(21, 101, 192, 0.08);
+  --dh-radius: 12px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  background: var(--dh-bg);
+  color: var(--dh-text);
+}
+
+a {
+  color: var(--dh-primary);
+  text-decoration: none;
+}
+
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.card-panel {
+  background: var(--dh-surface);
+  border-radius: var(--dh-radius);
+  box-shadow: var(--dh-shadow);
+  padding: 24px;
+  border: 1px solid var(--dh-border);
+}
+
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 500;
+  margin: 0 0 8px;
+  color: var(--dh-primary);
+}
+
+.page-subtitle {
+  color: var(--dh-muted);
+  margin: 0 0 24px;
+}
+
+.status-chip {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-weight: 500;
+}
+
+.status-pending { background: #fff3e0; color: #e65100; }
+.status-payment_uploaded { background: #e3f2fd; color: #1565c0; }
+.status-verified { background: #e8f5e9; color: #2e7d32; }
+.status-confirmed { background: #e8f5e9; color: #1b5e20; }
+.status-completed { background: #f3e5f5; color: #6a1b9a; }
+.status-cancelled { background: #ffebee; color: #c62828; }
+
+.fade-in {
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.full-width { width: 100%; }
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.stat-card {
+  text-align: center;
+  padding: 20px;
+  h3 { font-size: 2rem; margin: 8px 0; color: var(--dh-primary); }
+  p { margin: 0; color: var(--dh-muted); }
+}
