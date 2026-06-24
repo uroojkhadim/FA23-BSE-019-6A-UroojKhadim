@@ -1,23 +1,21 @@
-{
-  "hosting": {
-    "public": "dist",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ]
-  },
-  "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
-  },
-  "storage": {
-    "rules": "storage.rules"
-  }
-}
+import { initializeApp } from "firebase/app";
+
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCkf6Ui9m3amieZSVUaiL6JWsCQ8Sb0kAE",
+  authDomain: "doctor-hub-97ff6.firebaseapp.com",
+  projectId: "doctor-hub-97ff6",
+  storageBucket: "doctor-hub-97ff6.firebasestorage.app",
+  messagingSenderId: "531559894854",
+  appId: "1:531559894854:web:d81edb2d61dd2caf5a5f47",
+  measurementId: "G-JWEC6ZC9FC"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
