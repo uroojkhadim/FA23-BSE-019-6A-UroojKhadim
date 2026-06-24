@@ -205,7 +205,7 @@ const Candidates = () => {
 
       <Card className="border-none shadow-lg overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[900px]">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
                 <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600 dark:text-gray-400">
